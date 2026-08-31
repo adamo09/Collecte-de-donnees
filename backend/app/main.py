@@ -101,3 +101,9 @@ def accueil() -> dict:
         "version": __version__,
         "documentation": "/documentation",
     }
+
+
+# Alias attendu par convention des serveurs ASGI : « uvicorn app.main:app ».
+# Le nom français reste celui utilisé dans le code ; cet alias évite d'imposer
+# une commande de démarrage inhabituelle aux outils et à l'hébergeur.
+app = application

@@ -64,6 +64,7 @@ que des données validées.
 | [`docs/architecture.md`](docs/architecture.md) | Vue d'ensemble et choix techniques |
 | [`docs/api-synchronisation.md`](docs/api-synchronisation.md) | Contrat de synchronisation hors ligne |
 | [`docs/ecarts-schema-v0.1.md`](docs/ecarts-schema-v0.1.md) | **À valider** — écarts avec le schéma fourni |
+| [`docs/tests.md`](docs/tests.md) | **Comment tester le logiciel** — quatre niveaux |
 | [`docs/exploitation.md`](docs/exploitation.md) | Déploiement, sauvegarde, exploitation |
 | [`docs/CADERAC_modelisation_donnees_v0.1.pdf`](docs/) | Document source du commanditaire |
 
@@ -113,7 +114,12 @@ npm start
 cd backend && pytest -q          # 65 tests, sur PostgreSQL réel
 cd mobile  && npm test           # tests de la construction des lots
 cd mobile  && npm run verifier-types
+
+# Recette de bout en bout, serveur démarré — c'est celle à montrer
+python scripts/recette.py
 ```
+
+Le guide complet est dans [`docs/tests.md`](docs/tests.md).
 
 Les tests backend s'exécutent sur un vrai PostgreSQL, jamais sur SQLite : le
 schéma repose sur des types ENUM, des colonnes générées, des contraintes

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Environnement
+.env
+.env.local
+*.local
+
+# Node / Expo
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.log
+npm-debug.*
+yarn-error.*
+
+# Exports générés
+/exports_generes/
+*.xlsx
+!docs/**/*.xlsx
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

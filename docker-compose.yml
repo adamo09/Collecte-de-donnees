@@ -1,0 +1,47 @@
+# =====================================================================
+# CADERAC — Collecte terrain — Environnement de développement
+# =====================================================================
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: caderac_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-caderac}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-caderac}
+      POSTGRES_DB: ${POSTGRES_DB:-caderac}
+      # Le tri et les messages en français, cohérents avec les données terrain.
+      LANG: fr_FR.UTF-8
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - donnees_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-caderac} -d ${POSTGRES_DB:-caderac}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    container_name: caderac_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-caderac}:${POSTGRES_PASSWORD:-caderac}@db:5432/${POSTGRES_DB:-caderac}
+      SECRET_KEY: ${SECRET_KEY:-cle_de_developpement_uniquement}
+      ENVIRONNEMENT: ${ENVIRONNEMENT:-developpement}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head &&
+             python -m app.db.seed &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  donnees_postgres:

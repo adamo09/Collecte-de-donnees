@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "CADERAC Terrain",
+    "slug": "caderac-terrain",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ci.caderac.terrain",
+      "infoPlist": {
+        "NSCameraUsageDescription": "La caméra sert à scanner les étiquettes QR des engins et des équipements.",
+        "NSLocationWhenInUseUsageDescription": "La position sert à situer les trous de forage sur le carreau."
+      }
+    },
+    "android": {
+      "package": "ci.caderac.terrain",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      "adaptiveIcon": { "backgroundColor": "#1F3864" }
+    },
+    "plugins": [
+      ["expo-camera", { "cameraPermission": "Scanner les étiquettes QR des engins." }],
+      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "Situer les trous de forage." }]
+    ],
+    "extra": {
+      "urlApi": "http://10.0.2.2:8000/api/v1"
+    }
+  }
+}

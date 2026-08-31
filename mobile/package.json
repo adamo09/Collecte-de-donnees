@@ -1,0 +1,46 @@
+{
+  "name": "caderac-terrain",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CADERAC — Application de collecte terrain, fonctionnant hors ligne",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "verifier-types": "tsc --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.0.0",
+    "@react-navigation/native": "^7.0.0",
+    "@react-navigation/native-stack": "^7.0.0",
+    "expo": "~52.0.0",
+    "expo-camera": "~16.0.0",
+    "expo-constants": "^57.0.16",
+    "expo-crypto": "~14.0.0",
+    "expo-location": "~18.0.0",
+    "expo-network": "~7.0.0",
+    "expo-secure-store": "~14.0.0",
+    "expo-sqlite": "~15.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.5",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/react": "~18.3.12",
+    "babel-plugin-module-resolver": "^5.0.3",
+    "jest": "^29.7.0",
+    "jest-expo": "~52.0.0",
+    "typescript": "~5.3.3"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+.connexion {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--fond);
+}
+.connexion__boite {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-top: 3px solid var(--ocre);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.connexion__marque {
+  font-family: var(--titre);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+  margin: 0;
+}
+.connexion__titre {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--bleu);
+  margin: 0;
+}
+.connexion__sous-titre {
+  margin: -10px 0 4px;
+  color: var(--texte-doux);
+  font-size: 14px;
+}

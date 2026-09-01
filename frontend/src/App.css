@@ -1,0 +1,84 @@
+.cadre {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  min-height: 100%;
+}
+@media (max-width: 860px) {
+  .cadre { grid-template-columns: 1fr; }
+  .cote { position: static !important; height: auto !important; }
+  .cote__nav { flex-direction: row !important; flex-wrap: wrap; }
+}
+
+.cote {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: var(--bleu);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px;
+  gap: 20px;
+}
+.cote__marque { padding: 0 8px; }
+.cote__nom {
+  display: block;
+  font-family: var(--titre);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: #fff;
+}
+.cote__sous {
+  display: block;
+  font-family: var(--titre);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ocre);
+  margin-top: 2px;
+}
+
+.cote__nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.cote__lien {
+  display: block;
+  padding: 9px 10px;
+  border-radius: var(--rayon);
+  color: #BFCCE2;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  border-left: 3px solid transparent;
+}
+.cote__lien:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.cote__lien--actif {
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  border-left-color: var(--ocre);
+}
+
+.cote__pied { border-top: 1px solid rgba(255, 255, 255, .15); padding-top: 14px; }
+.cote__compte { padding: 0 8px 10px; line-height: 1.35; }
+.cote__compte strong { display: block; color: #fff; font-size: 14px; }
+.cote__compte span { display: block; color: #93A8C9; font-size: 12px; }
+.cote__deconnexion {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .25);
+  color: #BFCCE2;
+  border-radius: var(--rayon);
+  padding: 7px;
+  font-weight: 600;
+}
+.cote__deconnexion:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+
+.principal { padding: 22px 26px 60px; max-width: 1500px; }
+
+.page__tete { margin-bottom: 18px; }
+.page__tete h1 { font-size: 26px; font-weight: 700; }
+.page__tete p {
+  margin: 4px 0 0;
+  color: var(--texte-doux);
+  max-width: 78ch;
+  font-size: 14px;
+}

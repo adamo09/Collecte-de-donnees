@@ -1,0 +1,4 @@
+.valeur { font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.valeur--avant { color: var(--rouille); text-decoration: line-through; }
+.valeur--apres { color: var(--vert); font-weight: 600; }
+.motif { max-width: 40ch; color: var(--texte); }

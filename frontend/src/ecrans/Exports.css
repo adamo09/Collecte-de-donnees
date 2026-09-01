@@ -1,0 +1,13 @@
+.export__description {
+  margin: 0;
+  padding: 0 16px 14px;
+  color: var(--texte-doux);
+  font-size: 13.5px;
+  max-width: 74ch;
+}
+.export__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 16px 16px;
+}

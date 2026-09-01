@@ -47,5 +47,24 @@ services:
              python -m app.db.seed &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
+  web:
+    image: node:22-alpine
+    container_name: caderac_web
+    restart: unless-stopped
+    depends_on:
+      - api
+    working_dir: /app
+    environment:
+      # Le front appelle l'API en relatif (/api/v1) ; c'est le serveur de
+      # développement Vite qui achemine. Aucune URL n'est compilée dans le
+      # bundle, si bien que la même image sert en local et en production.
+      URL_API: http://api:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - ./backend/openapi.json:/backend/openapi.json:ro
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+
 volumes:
   donnees_postgres:

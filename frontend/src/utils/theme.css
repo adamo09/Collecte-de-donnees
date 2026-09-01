@@ -1,0 +1,63 @@
+/* =====================================================================
+   Palette reprise de mobile/src/utils/theme.ts : le back-office et
+   l'application terrain parlent la même langue visuelle.
+   Neutres biaisés vers le bleu de structure — aucun gris pur.
+   ===================================================================== */
+:root {
+  --bleu:          #1F3864;
+  --bleu-clair:    #2E5090;
+  --bleu-pale:     #E8EDF6;
+  --ocre:          #E8A33D;
+  --ocre-sombre:   #A96F14;
+
+  --fond:          #EDF0F5;
+  --surface:       #FFFFFF;
+  --surface-2:     #F5F8FC;
+  --bordure:       #D2DAE7;
+  --bordure-forte: #B4C0D4;
+  --texte:         #131C2E;
+  --texte-doux:    #4E5A73;
+  --texte-faible:  #78849B;
+
+  --vert:          #1B6B2F;
+  --vert-pale:     #E3F3E7;
+  --rouille:       #A8410A;
+  --rouille-pale:  #FBEBE1;
+  --violet:        #55398C;
+
+  --ombre: 0 1px 2px rgba(19, 28, 46, .05), 0 3px 12px rgba(19, 28, 46, .05);
+  --rayon: 6px;
+
+  --titre: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --corps: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #racine { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--corps);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--ocre); outline-offset: 2px; border-radius: 3px; }
+
+h1, h2, h3 { font-family: var(--titre); margin: 0; letter-spacing: -.005em; }
+
+button { font-family: inherit; font-size: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+
+table { border-collapse: collapse; width: 100%; }
+
+code { font-family: var(--mono); font-size: .92em; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

@@ -21,6 +21,7 @@ node_modules/
 .expo-shared/
 dist/
 web-build/
+*.tsbuildinfo
 *.log
 npm-debug.*
 yarn-error.*

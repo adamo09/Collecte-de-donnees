@@ -5,6 +5,7 @@ import logging
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -39,6 +40,19 @@ externe à partir des exports produits ici.
   d'interface avec le gestionnaire externe.
 """
 
+def identifiant_operation(route: APIRoute) -> str:
+    """Nomme une opération d'après sa fonction, non d'après son chemin.
+
+    FastAPI produit par défaut des identifiants comme
+    « connexion_json_api_v1_auth_connexion_json_post », qui deviennent des
+    noms de méthodes illisibles dans le client TypeScript généré depuis le
+    schéma OpenAPI. Le nom de la fonction Python suffit, préfixé de son
+    module pour éviter les collisions entre routeurs.
+    """
+    module = route.endpoint.__module__.rsplit(".", 1)[-1]
+    return f"{module}_{route.name}"
+
+
 application = FastAPI(
     title="CADERAC — Collecte de données terrain",
     description=DESCRIPTION,
@@ -47,6 +61,7 @@ application = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
     contact={"name": "Direction du Contrôle de Gestion CADERAC"},
+    generate_unique_id_function=identifiant_operation,
 )
 
 application.add_middleware(

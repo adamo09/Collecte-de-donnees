@@ -53,6 +53,7 @@ que des données validées.
 | Répertoire | Contenu |
 |---|---|
 | `backend/` | API FastAPI, schéma PostgreSQL, exports — [README](backend/README.md) |
+| `frontend/` | Back-office de contrôle React / Vite — [README](frontend/README.md) |
 | `mobile/` | Application terrain React Native / Expo — [README](mobile/README.md) |
 | `db/` | Schéma v0.1 fourni par le commanditaire, conservé pour référence |
 | `docs/` | Documentation fonctionnelle et technique |
@@ -79,8 +80,17 @@ cp .env.example .env       # puis renseigner SECRET_KEY et les mots de passe
 docker compose up
 ```
 
-L'API démarre sur http://localhost:8000, documentation interactive sur
-http://localhost:8000/documentation.
+Trois services démarrent :
+
+| Service | Adresse | Rôle |
+|---|---|---|
+| `db` | `localhost:5432` | PostgreSQL 16 |
+| `api` | http://localhost:8000 | API, documentation sur `/documentation` |
+| `web` | http://localhost:5173 | Back-office de contrôle |
+
+`docker compose up -d` rend la main dès que les conteneurs démarrent, **pas**
+quand l'initialisation est finie : le conteneur `api` joue encore les
+migrations et l'amorçage. Suivre avec `docker compose logs -f api`.
 
 ### Sans Docker
 
@@ -98,6 +108,14 @@ uvicorn app.main:app --reload
 site KOS (comptes `agent.kos`, `superviseur.kos`, `controleur`, mot de passe
 `caderac2026`). À ne pas charger en production.
 
+### Back-office, sans Docker
+
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
+```
+
 ### Application mobile
 
 ```bash
@@ -111,7 +129,8 @@ npm start
 ## Tests
 
 ```bash
-cd backend && pytest -q          # 65 tests, sur PostgreSQL réel
+cd backend && pytest -q          # 69 tests, sur PostgreSQL réel
+cd frontend && npm run verifier-types
 cd mobile  && npm test           # tests de la construction des lots
 cd mobile  && npm run verifier-types
 
@@ -134,6 +153,7 @@ Ce que les tests verrouillent, au-delà du fonctionnement nominal :
 - l'horodatage terrain n'est jamais écrasé par celui de la réception ;
 - une donnée brute n'atteint jamais un export ;
 - les colonnes du contrat d'export sont toutes présentes ;
+- le schéma OpenAPI versionné ne dérive pas de l'API réelle ;
 - un compteur engin ne régresse pas sur une synchronisation tardive.
 
 ---

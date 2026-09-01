@@ -61,3 +61,12 @@
 
 .colonne-case { width: 36px; text-align: center; }
 .colonne-case input { width: 16px; height: 16px; cursor: pointer; }
+
+/* Actions de la barre de filtres : « Ajouter », « Importer »… */
+.filtres__actions {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  margin-left: auto;
+  flex-wrap: wrap;
+}

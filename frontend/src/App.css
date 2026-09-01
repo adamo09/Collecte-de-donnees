@@ -82,3 +82,17 @@
   max-width: 78ch;
   font-size: 14px;
 }
+
+/* --- Sections de navigation ---------------------------------------- */
+.cote__nav { overflow-y: auto; }
+.cote__section + .cote__section { margin-top: 14px; }
+.cote__section-titre {
+  font-family: var(--titre);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #7E93B8;
+  margin: 0 0 4px;
+  padding: 0 10px;
+}

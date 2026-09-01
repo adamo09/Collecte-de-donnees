@@ -26,6 +26,9 @@ interface ValeurSession {
   voitTousLesSites: boolean;
   peutValider: boolean;
   peutExporter: boolean;
+  /** La gestion des référentiels et des comptes est réservée à
+   *  l'administrateur : une erreur y touche toute la collecte. */
+  estAdmin: boolean;
 }
 
 const Contexte = createContext<ValeurSession | null>(null);
@@ -84,6 +87,7 @@ export function FournisseurSession({ children }: { children: ReactNode }) {
       voitTousLesSites: role === 'controleur' || role === 'admin',
       peutValider: role === 'superviseur' || role === 'controleur' || role === 'admin',
       peutExporter: role === 'superviseur' || role === 'controleur' || role === 'admin',
+      estAdmin: role === 'admin',
     };
   }, [pret, utilisateur, seConnecter, seDeconnecter]);
 

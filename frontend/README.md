@@ -62,19 +62,37 @@ dérive de l'API réelle.
 
 ## Périmètre
 
-La boucle quotidienne du contrôleur, pas tout l'administratif :
+Onze écrans, en trois sections qui suivent les métiers plutôt que les tables.
+
+### Contrôle — le quotidien du contrôleur
 
 | Écran | Ce qu'il résout |
 |---|---|
 | **File de validation** | Le cœur du métier : contrôler et valider en lot, avec motif |
+| **Consulter les données** | Retrouver un enregistrement précis et le corriger, motif à l'appui |
 | **Trous non clôturés** | L'anomalie la plus probable du module foration (ch. 6) |
 | **Complétude** | Qui déclare, qui ne déclare pas — le pilotage du déploiement (ch. 13) |
 | **Exports** | Le livrable au gestionnaire externe, aperçu puis téléchargement |
 | **Journal d'audit** | De quoi défendre un chiffre contesté (ch. 5.1) |
 
-Les référentiels et la gestion des comptes passent encore par la documentation
-interactive de l'API : un administrateur s'en accommode quelques semaines, un
-contrôleur non.
+### Saisie bureau — ce qui ne vient pas du terrain
+
+| Écran | Ce qu'il résout |
+|---|---|
+| **Charges engin** | Assurances, carburant, maintenance, avec la période couverte (ch. 11.1) |
+| **Prestations de minage** | Factures du prestataire externe, rattachées au tir (ch. 7) |
+| **Ventes** | Facturation, avec rattachement à la pesée et alerte sur l'écart (ch. 10.2) |
+| **Sorties magasin** | Pièces vers un engin **ou** un équipement, jamais les deux (ch. 9.1) |
+
+### Référentiels — réservé à l'administrateur
+
+Parc d'engins, équipements de concassage, personnel, produits et leur parcours
+de concassage, tirs, motifs d'arrêt, comptes. L'inventaire initial passe par un
+**import CSV** : saisir cent engins un par un n'aurait pas de sens.
+
+Couverture de l'API : **45 des 69 points d'entrée**. Le reste est consommé par
+l'application mobile — synchronisation, scans de foration, déclarations
+d'événements — et n'a rien à faire dans un back-office.
 
 ## Choix d'interface, et pourquoi
 
@@ -87,6 +105,10 @@ contrôleur non.
 | **Jour muet marqué d'un liseré, pas d'un aplat** | Sur trente jours, un fond coloré sur la majorité des lignes ne signale plus rien |
 | **Un site sans parc n'est pas en défaut** | Signaler en rouge un site dont l'inventaire n'est pas fait viderait l'alerte de son sens |
 | **Téléchargement via `fetch`** | Le jeton d'authentification voyage dans un en-tête, jamais dans l'URL |
+| **Import CSV ligne par ligne** | Un fichier de cent lignes dont trois sont fautives doit en importer quatre-vingt-dix-sept, pas échouer en bloc |
+| **`<dialog>` natif pour les modales** | Focus, touche Échap et fond inerte gérés par le navigateur, sans bibliothèque |
+| **Un chargeur typé par module de consultation** | Un chemin dynamique passé au client perdrait le typage engendré depuis OpenAPI, qui est précisément ce qui doit casser si l'API change |
+| **Motif obligatoire avant correction** | La règle serveur est répétée dans l'interface : le bouton reste inerte tant que le motif manque |
 
 ## Organisation
 

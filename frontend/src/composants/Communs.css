@@ -132,3 +132,6 @@
 .tableau tbody tr.selectionnee { background: var(--bleu-pale); }
 .tableau .num { font-variant-numeric: tabular-nums; text-align: right; }
 .tableau .mono { font-family: var(--mono); font-size: 12.5px; color: var(--texte); }
+
+/* Information attendue mais absente : signalée sans crier. */
+.manque { color: var(--texte-faible); font-style: italic; }

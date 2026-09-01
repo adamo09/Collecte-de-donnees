@@ -1,0 +1,29 @@
+.import__intitule {
+  font-family: var(--titre);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+  margin: 0 0 6px;
+}
+.import__colonnes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.import__colonnes li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--texte-doux);
+}
+.import__colonnes code {
+  background: var(--surface-2);
+  border: 1px solid var(--bordure);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--texte);
+}
+.import__requis { color: var(--ocre-sombre); font-weight: 600; font-size: 12px; }
+.import__aide { color: var(--texte-faible); font-size: 12px; font-style: italic; }
+.import__apercu .tableau,
+.import__echecs .tableau { font-size: 12.5px; }

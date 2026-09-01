@@ -1,0 +1,89 @@
+.modale {
+  width: calc(100% - 32px);
+  border: none;
+  border-radius: var(--rayon);
+  padding: 0;
+  background: transparent;
+  color: var(--texte);
+}
+.modale::backdrop { background: rgba(19, 28, 46, .45); }
+
+.modale__panneau {
+  background: var(--surface);
+  border-radius: var(--rayon);
+  border-top: 3px solid var(--ocre);
+  box-shadow: 0 12px 40px rgba(19, 28, 46, .28);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 64px);
+}
+.modale__tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--bordure);
+}
+.modale__tete h2 { font-size: 18px; font-weight: 700; }
+.modale__tete p { margin: 3px 0 0; color: var(--texte-doux); font-size: 13px; max-width: 56ch; }
+.modale__fermer {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--texte-faible);
+  padding: 0 4px;
+}
+.modale__fermer:hover { color: var(--texte); }
+
+.modale__corps {
+  padding: 16px 18px;
+  overflow-y: auto;
+  display: grid;
+  gap: 14px;
+}
+.modale__pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--bordure);
+}
+
+/* Deux champs par ligne quand la place le permet : un formulaire de
+   référentiel compte souvent une dizaine de champs courts. */
+.grille-champs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.grille-champs .pleine-largeur { grid-column: 1 / -1; }
+
+/* Sélecteur de niveaux, où l'ordre des clics porte du sens. */
+.ligneChoix { display: flex; flex-wrap: wrap; gap: 8px; }
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--rayon);
+  border: 1.5px solid var(--bordure-forte);
+  background: var(--surface);
+  color: var(--texte);
+  font-weight: 600;
+  font-size: 13px;
+}
+.puce:hover { background: var(--bleu-pale); }
+.puce--active { background: var(--bleu); border-color: var(--bleu); color: #fff; }
+.puce__rang {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ocre);
+  color: #131C2E;
+  font-size: 11px;
+  font-weight: 800;
+}

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -66,6 +67,34 @@ class Client:
         self.url = url.rstrip("/")
         self.http = httpx.Client(timeout=30.0)
         self.jetons: dict[str, str] = {}
+
+    def attendre(self, secondes: int = 90) -> bool:
+        """Attend que l'API réponde avant de commencer.
+
+        « docker compose up » rend la main dès que le conteneur démarre, pas
+        quand uvicorn écoute : entre les deux, il reste les migrations et
+        l'amorçage. Sans cette attente, la recette échoue sur un serveur
+        parfaitement sain.
+        """
+        sonde = self.url.rsplit("/api/", 1)[0] + "/sante"
+        limite = time.monotonic() + secondes
+        annonce = False
+        while time.monotonic() < limite:
+            try:
+                if self.http.get(sonde, timeout=3.0).status_code == 200:
+                    if annonce:
+                        print(f" {VERT}prêt{FIN}")
+                    return True
+            except httpx.HTTPError:
+                pass
+            if not annonce:
+                print(f"  {GRIS}Le serveur démarre encore…{FIN}", end="", flush=True)
+                annonce = True
+            print(f"{GRIS}.{FIN}", end="", flush=True)
+            time.sleep(2)
+        if annonce:
+            print()
+        return False
 
     def connecter(self, role: str, login: str, mot_de_passe: str) -> bool:
         try:
@@ -122,6 +151,13 @@ def principal() -> int:
     # =================================================================
     titre("0.", "Mise en place")
     # =================================================================
+    if not client.attendre():
+        print(f"\n{ROUGE}Serveur injoignable sur {arguments.url}.{FIN}")
+        print(f"{GRIS}Vérifier son état : docker compose ps{FIN}")
+        print(f"{GRIS}Voir ses journaux : docker compose logs api{FIN}")
+        return 2
+    verifier(True, "Serveur joignable")
+
     if not client.connecter("admin", arguments.admin_login, arguments.admin_mot_de_passe):
         print(f"{ROUGE}Connexion administrateur refusée "
               f"(login « {arguments.admin_login} »).{FIN}")

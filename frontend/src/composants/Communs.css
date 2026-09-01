@@ -135,3 +135,7 @@
 
 /* Information attendue mais absente : signalée sans crier. */
 .manque { color: var(--texte-faible); font-style: italic; }
+
+/* Actions groupées en fin de ligne de tableau. */
+.actions-ligne { display: flex; gap: 6px; justify-content: flex-end; }
+.actions-ligne .bouton { padding: 4px 10px; font-size: 13px; }

@@ -10,12 +10,14 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
 import { texteOuNull, useEcriture } from '@/utils/mutations';
 import { useSites } from '@/utils/requetes';
 
 type Niveau = components['schemas']['NiveauConcassage'];
+type Produit = components['schemas']['ProduitSortie'];
 
 const NIVEAUX: { valeur: Niveau; libelle: string }[] = [
   { valeur: 'primaire', libelle: 'Primaire' },
@@ -32,6 +34,7 @@ export default function EcranProduits() {
   const [formulaire, setFormulaire] = useState(VIDE);
   const [parcours, setParcours] = useState<Niveau[]>([]);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [enEdition, setEnEdition] = useState<Produit | null>(null);
 
   const produits = useQuery({
     queryKey: ['produits'],
@@ -61,6 +64,40 @@ export default function EcranProduits() {
     },
   });
 
+  const modification = useEcriture({
+    cles: ['produits'],
+    action: async ({ id, corps }: { id: string; corps: Record<string, unknown> }) => {
+      const { data, error } = await api.PATCH('/api/v1/referentiels/produits/{produit_id}', {
+        params: { path: { produit_id: id } },
+        body: corps as never,
+      });
+      if (error) throw new Error(messageErreur(error));
+      return data!;
+    },
+    messageSucces: (p) => `Produit ${p.code} mis à jour.`,
+    onSucces: () => {
+      setEnEdition(null);
+      setModaleOuverte(false);
+      setFormulaire(VIDE);
+      setParcours([]);
+    },
+  });
+
+  const ouvrirEdition = (produit: Produit) => {
+    setEnEdition(produit);
+    setFormulaire({
+      code: produit.code,
+      libelle: produit.libelle,
+      granulometrie: produit.granulometrie ?? '',
+      site_id: produit.site_id != null ? String(produit.site_id) : '',
+    });
+    // Le parcours est ordonné : on le recharge dans l'ordre stocké.
+    setParcours([...produit.parcours].sort((a, b) => a.ordre - b.ordre).map((e) => e.niveau));
+    setModaleOuverte(true);
+  };
+
+  const retour = creation.retour ?? modification.retour;
+
   const basculerNiveau = (niveau: Niveau) =>
     setParcours((precedent) =>
       precedent.includes(niveau)
@@ -83,7 +120,7 @@ export default function EcranProduits() {
         </div>
       </header>
 
-      {creation.retour && <Encart ton={creation.retour.ton}>{creation.retour.texte}</Encart>}
+      {retour && <Encart ton={retour.ton}>{retour.texte}</Encart>}
 
       <Carte>
         <div className="filtres">
@@ -92,7 +129,16 @@ export default function EcranProduits() {
             {(produits.data?.length ?? 0) > 1 ? 's' : ''}
           </div>
           <div className="filtres__actions">
-            <Bouton onClick={() => setModaleOuverte(true)}>Ajouter un produit</Bouton>
+            <Bouton
+              onClick={() => {
+                setEnEdition(null);
+                setFormulaire(VIDE);
+                setParcours([]);
+                setModaleOuverte(true);
+              }}
+            >
+              Ajouter un produit
+            </Bouton>
           </div>
         </div>
       </Carte>
@@ -115,6 +161,7 @@ export default function EcranProduits() {
                   <th>Site</th>
                   <th>Parcours de concassage</th>
                   <th>État</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -136,6 +183,20 @@ export default function EcranProduits() {
                         {produit.actif ? 'Actif' : 'Retiré'}
                       </Pastille>
                     </td>
+                    <td>
+                      <ActionsReferentiel
+                        actif={produit.actif}
+                        libelleObjet={`Le produit ${produit.code}`}
+                        enCours={modification.isPending}
+                        onModifier={() => ouvrirEdition(produit)}
+                        onBasculerActif={() =>
+                          modification.mutate({
+                            id: produit.id,
+                            corps: { actif: !produit.actif },
+                          })
+                        }
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -145,26 +206,50 @@ export default function EcranProduits() {
       </Carte>
 
       <Modale
-        titre="Ajouter un produit"
-        aide="Cocher les niveaux dans l'ordre où le produit les traverse."
+        titre={enEdition ? `Modifier ${enEdition.code}` : 'Ajouter un produit'}
+        aide={
+          enEdition
+            ? "Le code n'est pas modifiable : les pesées et les ventes déjà enregistrées y renvoient."
+            : "Cocher les niveaux dans l'ordre où le produit les traverse."
+        }
         ouverte={modaleOuverte}
-        onFermer={() => setModaleOuverte(false)}
+        onFermer={() => {
+          setModaleOuverte(false);
+          setEnEdition(null);
+        }}
+        erreur={retour?.ton === 'erreur' ? retour.texte : null}
         actions={
           <>
-            <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
-              onClick={() =>
-                creation.mutate({
-                  code: formulaire.code.trim(),
+              variante="secondaire"
+              onClick={() => {
+                setModaleOuverte(false);
+                setEnEdition(null);
+              }}
+            >
+              Annuler
+            </Bouton>
+            <Bouton
+              disabled={!valide || creation.isPending || modification.isPending}
+              onClick={() => {
+                const commun = {
                   libelle: formulaire.libelle.trim(),
                   granulometrie: texteOuNull(formulaire.granulometrie),
                   site_id: formulaire.site_id ? Number(formulaire.site_id) : null,
                   parcours: parcours.map((niveau, index) => ({ ordre: index + 1, niveau })),
-                })
-              }
+                };
+                if (enEdition) {
+                  modification.mutate({ id: enEdition.id, corps: commun });
+                } else {
+                  creation.mutate({ code: formulaire.code.trim(), ...commun });
+                }
+              }}
             >
-              {creation.isPending ? 'Création…' : 'Créer'}
+              {creation.isPending || modification.isPending
+                ? 'Enregistrement…'
+                : enEdition
+                  ? 'Enregistrer'
+                  : 'Créer'}
             </Bouton>
           </>
         }
@@ -175,7 +260,8 @@ export default function EcranProduits() {
               value={formulaire.code}
               onChange={(e) => setFormulaire({ ...formulaire, code: e.target.value })}
               placeholder="6-10"
-              autoFocus
+              autoFocus={!enEdition}
+              disabled={enEdition !== null}
             />
           </Champ>
           <Champ libelle="Désignation *">

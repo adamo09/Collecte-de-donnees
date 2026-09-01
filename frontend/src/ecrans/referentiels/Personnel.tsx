@@ -9,10 +9,14 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { ImportCsv } from '@/composants/ImportCsv';
 import { Modale } from '@/composants/Modale';
+import type { components } from '@/api/schema';
 import { texteOuNull, useEcriture } from '@/utils/mutations';
 import { useCentresDeCout, useSites } from '@/utils/requetes';
+
+type Agent = components['schemas']['PersonnelSortie'];
 
 const VIDE = {
   matricule: '',
@@ -28,6 +32,7 @@ export default function EcranPersonnel() {
   const centres = useCentresDeCout();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [enEdition, setEnEdition] = useState<Agent | null>(null);
   const [importOuvert, setImportOuvert] = useState(false);
   const [filtreSite, setFiltreSite] = useState('');
 
@@ -60,6 +65,39 @@ export default function EcranPersonnel() {
     },
   });
 
+  const modification = useEcriture({
+    cles: ['personnel'],
+    action: async ({ matricule, corps }: { matricule: string; corps: Record<string, unknown> }) => {
+      const { data, error } = await api.PATCH('/api/v1/referentiels/personnel/{matricule}', {
+        params: { path: { matricule } },
+        body: corps as never,
+      });
+      if (error) throw new Error(messageErreur(error));
+      return data!;
+    },
+    messageSucces: (agent) =>
+      `${agent.nom_prenoms} mis à jour${agent.actif ? '' : ' et retiré des listes de saisie'}.`,
+    onSucces: () => {
+      setEnEdition(null);
+      setModaleOuverte(false);
+      setFormulaire(VIDE);
+    },
+  });
+
+  const ouvrirEdition = (agent: Agent) => {
+    setEnEdition(agent);
+    setFormulaire({
+      matricule: agent.matricule,
+      nom_prenoms: agent.nom_prenoms,
+      fonction: agent.fonction ?? '',
+      site_id: agent.site_id != null ? String(agent.site_id) : '',
+      centre_cout: agent.centre_cout ?? '',
+      date_debut_affect: agent.date_debut_affect ?? '',
+    });
+    setModaleOuverte(true);
+  };
+
+  const retour = creation.retour ?? modification.retour;
   const valide = formulaire.matricule.trim() !== '' && formulaire.nom_prenoms.trim() !== '';
 
   return (
@@ -74,7 +112,7 @@ export default function EcranPersonnel() {
         </div>
       </header>
 
-      {creation.retour && <Encart ton={creation.retour.ton}>{creation.retour.texte}</Encart>}
+      {retour && <Encart ton={retour.ton}>{retour.texte}</Encart>}
 
       <Carte>
         <div className="filtres">
@@ -94,7 +132,15 @@ export default function EcranPersonnel() {
             <Bouton variante="secondaire" onClick={() => setImportOuvert(true)}>
               Importer un CSV
             </Bouton>
-            <Bouton onClick={() => setModaleOuverte(true)}>Ajouter un agent</Bouton>
+            <Bouton
+              onClick={() => {
+                setEnEdition(null);
+                setFormulaire(VIDE);
+                setModaleOuverte(true);
+              }}
+            >
+              Ajouter un agent
+            </Bouton>
           </div>
         </div>
       </Carte>
@@ -118,6 +164,7 @@ export default function EcranPersonnel() {
                   <th>Centre de coût</th>
                   <th>Depuis</th>
                   <th>État</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -134,6 +181,27 @@ export default function EcranPersonnel() {
                         {agent.actif ? 'Actif' : 'Parti'}
                       </Pastille>
                     </td>
+                    <td>
+                      <ActionsReferentiel
+                        actif={agent.actif}
+                        libelleObjet={agent.nom_prenoms}
+                        enCours={modification.isPending}
+                        onModifier={() => ouvrirEdition(agent)}
+                        onBasculerActif={() =>
+                          modification.mutate({
+                            matricule: agent.matricule,
+                            corps: {
+                              actif: !agent.actif,
+                              // Un départ est daté : sans quoi on ne sait plus
+                              // depuis quand l'agent ne déclare plus.
+                              ...(agent.actif
+                                ? { date_fin_affect: new Date().toISOString().slice(0, 10) }
+                                : { date_fin_affect: null }),
+                            },
+                          })
+                        }
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -143,26 +211,54 @@ export default function EcranPersonnel() {
       </Carte>
 
       <Modale
-        titre="Ajouter un agent"
+        titre={enEdition ? `Modifier ${enEdition.nom_prenoms}` : 'Ajouter un agent'}
+        aide={
+          enEdition
+            ? "Le matricule n'est pas modifiable : c'est la clé à laquelle chaque déclaration terrain se rattache."
+            : undefined
+        }
         ouverte={modaleOuverte}
-        onFermer={() => setModaleOuverte(false)}
+        onFermer={() => {
+          setModaleOuverte(false);
+          setEnEdition(null);
+        }}
+        erreur={retour?.ton === 'erreur' ? retour.texte : null}
         actions={
           <>
-            <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
-              onClick={() =>
-                creation.mutate({
-                  matricule: formulaire.matricule.trim().toUpperCase(),
+              variante="secondaire"
+              onClick={() => {
+                setModaleOuverte(false);
+                setEnEdition(null);
+              }}
+            >
+              Annuler
+            </Bouton>
+            <Bouton
+              disabled={!valide || creation.isPending || modification.isPending}
+              onClick={() => {
+                const corps = {
                   nom_prenoms: formulaire.nom_prenoms.trim(),
                   fonction: texteOuNull(formulaire.fonction),
                   site_id: formulaire.site_id ? Number(formulaire.site_id) : null,
                   centre_cout: texteOuNull(formulaire.centre_cout),
                   date_debut_affect: texteOuNull(formulaire.date_debut_affect),
-                })
-              }
+                };
+                if (enEdition) {
+                  modification.mutate({ matricule: enEdition.matricule, corps });
+                } else {
+                  creation.mutate({
+                    matricule: formulaire.matricule.trim().toUpperCase(),
+                    ...corps,
+                  });
+                }
+              }}
             >
-              {creation.isPending ? 'Création…' : 'Créer'}
+              {creation.isPending || modification.isPending
+                ? 'Enregistrement…'
+                : enEdition
+                  ? 'Enregistrer'
+                  : 'Créer'}
             </Bouton>
           </>
         }
@@ -173,7 +269,8 @@ export default function EcranPersonnel() {
               value={formulaire.matricule}
               onChange={(e) => setFormulaire({ ...formulaire, matricule: e.target.value })}
               placeholder="MAT001"
-              autoFocus
+              autoFocus={!enEdition}
+              disabled={enEdition !== null}
             />
           </Champ>
           <Champ libelle="Nom et prénoms *">

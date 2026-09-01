@@ -20,6 +20,7 @@ import {
   Pastille,
   Vide,
 } from '@/composants/Communs';
+import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { ImportCsv } from '@/composants/ImportCsv';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
@@ -58,6 +59,8 @@ export default function EcranEngins() {
   const sites = useSites();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  /** Engin en cours d'édition. null = création. */
+  const [enEdition, setEnEdition] = useState<Engin | null>(null);
   const [importOuvert, setImportOuvert] = useState(false);
   const [filtreSite, setFiltreSite] = useState('');
   const [filtreFamille, setFiltreFamille] = useState('');
@@ -103,6 +106,42 @@ export default function EcranEngins() {
     },
   });
 
+  const modification = useEcriture({
+    cles: ['engins', 'engins-actifs'],
+    action: async ({ id, corps }: { id: string; corps: Record<string, unknown> }) => {
+      const { data, error } = await api.PATCH('/api/v1/referentiels/engins/{engin_id}', {
+        params: { path: { engin_id: id } },
+        body: corps as never,
+      });
+      if (error) throw new Error(messageErreur(error));
+      return data!;
+    },
+    messageSucces: (engin) => `Engin ${engin.numero_parc} mis à jour.`,
+    onSucces: () => {
+      setEnEdition(null);
+      setModaleOuverte(false);
+      setFormulaire(VIDE);
+    },
+  });
+
+  const ouvrirEdition = (engin: Engin) => {
+    setEnEdition(engin);
+    setFormulaire({
+      numero_parc: engin.numero_parc,
+      matricule: engin.matricule ?? '',
+      famille: engin.famille,
+      marque: engin.marque ?? '',
+      modele: engin.modele ?? '',
+      site_id: String(engin.site_id),
+      centre_cout_reference: engin.centre_cout_reference ?? '',
+      capacite_nominale: engin.capacite_nominale != null ? String(engin.capacite_nominale) : '',
+      unite_capacite: engin.unite_capacite ?? 't',
+      puissance_kw: engin.puissance_kw != null ? String(engin.puissance_kw) : '',
+      unite_compteur: engin.unite_compteur,
+    });
+    setModaleOuverte(true);
+  };
+
   const corpsDepuisFormulaire = () => ({
     numero_parc: formulaire.numero_parc.trim().toUpperCase(),
     matricule: texteOuNull(formulaire.matricule),
@@ -118,6 +157,13 @@ export default function EcranEngins() {
     puissance_kw: nombreOuNull(formulaire.puissance_kw),
     unite_compteur: formulaire.unite_compteur,
   });
+
+  /** À la modification, le numéro de parc n'est pas transmis : il porte le
+   *  jeton QR gravé sur l'engin, le changer invaliderait l'étiquette. */
+  const corpsModification = () => {
+    const { numero_parc: _ignore, ...reste } = corpsDepuisFormulaire();
+    return reste;
+  };
 
   const parSite = useMemo(() => {
     const compte = new Map<number, number>();
@@ -143,8 +189,10 @@ export default function EcranEngins() {
         </div>
       </header>
 
-      {creation.retour && (
-        <Encart ton={creation.retour.ton}>{creation.retour.texte}</Encart>
+      {(creation.retour ?? modification.retour) && (
+        <Encart ton={(creation.retour ?? modification.retour)!.ton}>
+          {(creation.retour ?? modification.retour)!.texte}
+        </Encart>
       )}
 
       <Carte>
@@ -175,7 +223,15 @@ export default function EcranEngins() {
             <Bouton variante="secondaire" onClick={() => setImportOuvert(true)}>
               Importer un CSV
             </Bouton>
-            <Bouton onClick={() => setModaleOuverte(true)}>Ajouter un engin</Bouton>
+            <Bouton
+              onClick={() => {
+                setEnEdition(null);
+                setFormulaire(VIDE);
+                setModaleOuverte(true);
+              }}
+            >
+              Ajouter un engin
+            </Bouton>
           </div>
         </div>
       </Carte>
@@ -207,6 +263,7 @@ export default function EcranEngins() {
                   <th className="num">Capacité</th>
                   <th className="num">Compteur</th>
                   <th>État</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -233,6 +290,20 @@ export default function EcranEngins() {
                         {engin.actif ? 'Actif' : 'Retiré'}
                       </Pastille>
                     </td>
+                    <td>
+                      <ActionsReferentiel
+                        actif={engin.actif}
+                        libelleObjet={`L'engin ${engin.numero_parc}`}
+                        enCours={modification.isPending}
+                        onModifier={() => ouvrirEdition(engin)}
+                        onBasculerActif={() =>
+                          modification.mutate({
+                            id: engin.id,
+                            corps: { actif: !engin.actif },
+                          })
+                        }
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -242,21 +313,47 @@ export default function EcranEngins() {
       </Carte>
 
       <Modale
-        titre="Ajouter un engin"
-        aide="Le numéro de parc suit la nomenclature CADERAC : DU pour les dumpers, FE pour les foreuses."
+        titre={enEdition ? `Modifier ${enEdition.numero_parc}` : 'Ajouter un engin'}
+        aide={
+          enEdition
+            ? "Le numéro de parc n'est pas modifiable : il porte le jeton QR gravé sur l'engin."
+            : 'Le numéro de parc suit la nomenclature CADERAC : DU pour les dumpers, FE pour les foreuses.'
+        }
         ouverte={modaleOuverte}
-        onFermer={() => setModaleOuverte(false)}
+        onFermer={() => {
+          setModaleOuverte(false);
+          setEnEdition(null);
+        }}
         largeur={620}
+        erreur={
+          (enEdition ? modification.retour : creation.retour)?.ton === 'erreur'
+            ? (enEdition ? modification.retour : creation.retour)?.texte
+            : null
+        }
         actions={
           <>
-            <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>
+            <Bouton
+              variante="secondaire"
+              onClick={() => {
+                setModaleOuverte(false);
+                setEnEdition(null);
+              }}
+            >
               Annuler
             </Bouton>
             <Bouton
-              onClick={() => creation.mutate(corpsDepuisFormulaire())}
-              disabled={!valide || creation.isPending}
+              onClick={() =>
+                enEdition
+                  ? modification.mutate({ id: enEdition.id, corps: corpsModification() })
+                  : creation.mutate(corpsDepuisFormulaire())
+              }
+              disabled={!valide || creation.isPending || modification.isPending}
             >
-              {creation.isPending ? 'Création…' : 'Créer'}
+              {creation.isPending || modification.isPending
+                ? 'Enregistrement…'
+                : enEdition
+                  ? 'Enregistrer'
+                  : 'Créer'}
             </Bouton>
           </>
         }
@@ -267,7 +364,8 @@ export default function EcranEngins() {
               value={formulaire.numero_parc}
               onChange={(e) => setFormulaire({ ...formulaire, numero_parc: e.target.value })}
               placeholder="DU01"
-              autoFocus
+              autoFocus={!enEdition}
+              disabled={enEdition !== null}
             />
           </Champ>
           <Champ libelle="Famille *">

@@ -342,6 +342,137 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/referentiels/sites/{site_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Modifier un site */
+        patch: operations["referentiels_modifier_site"];
+        trace?: never;
+    };
+    "/api/v1/referentiels/centres-de-cout/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Modifier un centre de coûts */
+        patch: operations["referentiels_modifier_centre"];
+        trace?: never;
+    };
+    "/api/v1/referentiels/personnel/{matricule}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Modifier un agent
+         * @description Le matricule n'est pas modifiable : c'est la clé à laquelle chaque
+         *     déclaration terrain se rattache. Un agent qui part est désactivé.
+         */
+        patch: operations["referentiels_modifier_personnel"];
+        trace?: never;
+    };
+    "/api/v1/referentiels/equipements/{equipement_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Modifier un équipement */
+        patch: operations["referentiels_modifier_equipement"];
+        trace?: never;
+    };
+    "/api/v1/referentiels/produits/{produit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Modifier un produit
+         * @description Le parcours fourni remplace entièrement l'ancien : une séquence se
+         *     remplace, elle ne se modifie pas élément par élément.
+         */
+        patch: operations["referentiels_modifier_produit"];
+        trace?: never;
+    };
+    "/api/v1/referentiels/causes-arret/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Modifier un motif d'arrêt
+         * @description Le code n'est pas modifiable : les événements déjà déclarés y
+         *     renvoient, et le renommer fausserait toute statistique d'arrêts.
+         */
+        patch: operations["referentiels_modifier_cause"];
+        trace?: never;
+    };
+    "/api/v1/referentiels/tirs/{tir_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Modifier un tir */
+        patch: operations["referentiels_modifier_tir"];
+        trace?: never;
+    };
     "/api/v1/synchronisation/lots": {
         parameters: {
             query?: never;
@@ -1247,6 +1378,19 @@ export interface components {
              */
             actif: boolean;
         };
+        /**
+         * CauseArretModification
+         * @description Le code n'est pas modifiable : les événements déjà déclarés y
+         *     renvoient, et le renommer fausserait toute statistique d'arrêts.
+         */
+        CauseArretModification: {
+            /** Libelle */
+            libelle?: string | null;
+            /** Categorie */
+            categorie?: string | null;
+            /** Actif */
+            actif?: boolean | null;
+        };
         /** CauseArretSortie */
         CauseArretSortie: {
             /** Code */
@@ -1269,6 +1413,13 @@ export interface components {
              * @default true
              */
             actif: boolean;
+        };
+        /** CentreDeCoutModification */
+        CentreDeCoutModification: {
+            /** Libelle */
+            libelle?: string | null;
+            /** Actif */
+            actif?: boolean | null;
         };
         /** CentreDeCoutSortie */
         CentreDeCoutSortie: {
@@ -1502,6 +1653,7 @@ export interface components {
         };
         /** EnginModification */
         EnginModification: {
+            famille?: components["schemas"]["FamilleEngin"] | null;
             /** Matricule */
             matricule?: string | null;
             /** Type Engin */
@@ -1593,6 +1745,23 @@ export interface components {
              * @default true
              */
             actif: boolean;
+        };
+        /** EquipementModification */
+        EquipementModification: {
+            /** Designation */
+            designation?: string | null;
+            type?: components["schemas"]["TypeEquipement"] | null;
+            /** Site Id */
+            site_id?: number | null;
+            /** Ligne */
+            ligne?: string | null;
+            niveau?: components["schemas"]["NiveauConcassage"] | null;
+            /** Poste */
+            poste?: string | null;
+            /** Puissance Kw */
+            puissance_kw?: number | string | null;
+            /** Actif */
+            actif?: boolean | null;
         };
         /** EquipementSortie */
         EquipementSortie: {
@@ -2279,6 +2448,27 @@ export interface components {
              */
             actif: boolean;
         };
+        /**
+         * PersonnelModification
+         * @description Le matricule n'est pas modifiable : c'est la clé à laquelle chaque
+         *     déclaration terrain se rattache.
+         */
+        PersonnelModification: {
+            /** Nom Prenoms */
+            nom_prenoms?: string | null;
+            /** Fonction */
+            fonction?: string | null;
+            /** Site Id */
+            site_id?: number | null;
+            /** Centre Cout */
+            centre_cout?: string | null;
+            /** Date Debut Affect */
+            date_debut_affect?: string | null;
+            /** Date Fin Affect */
+            date_fin_affect?: string | null;
+            /** Actif */
+            actif?: boolean | null;
+        };
         /** PersonnelSortie */
         PersonnelSortie: {
             /** Matricule */
@@ -2507,6 +2697,25 @@ export interface components {
              */
             parcours: components["schemas"]["ProduitParcoursEntree"][];
         };
+        /**
+         * ProduitModification
+         * @description Le code n'est pas modifiable : il est repris par les pesées et les
+         *     ventes déjà enregistrées.
+         */
+        ProduitModification: {
+            /** Libelle */
+            libelle?: string | null;
+            /** Site Id */
+            site_id?: number | null;
+            /** Granulometrie */
+            granulometrie?: string | null;
+            /** Actif */
+            actif?: boolean | null;
+            /** Parcours */
+            parcours?: {
+                [key: string]: unknown;
+            }[] | null;
+        };
         /** ProduitParcoursEntree */
         ProduitParcoursEntree: {
             /** Ordre */
@@ -2717,6 +2926,13 @@ export interface components {
              */
             actif: boolean;
         };
+        /** SiteModification */
+        SiteModification: {
+            /** Libelle */
+            libelle?: string | null;
+            /** Actif */
+            actif?: boolean | null;
+        };
         /** SiteSortie */
         SiteSortie: {
             /** Id */
@@ -2839,6 +3055,13 @@ export interface components {
             numero_t: string;
             /** Site Id */
             site_id: number;
+            /** Date Tir */
+            date_tir?: string | null;
+        };
+        /** TirModification */
+        TirModification: {
+            /** Numero T */
+            numero_t?: string | null;
             /** Date Tir */
             date_tir?: string | null;
         };
@@ -4170,6 +4393,251 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TirSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_site: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_centre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CentreDeCoutModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CentreDeCoutSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_personnel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matricule: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonnelModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonnelSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_equipement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                equipement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquipementModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EquipementSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_produit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                produit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProduitModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_cause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CauseArretModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CauseArretSortie"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    referentiels_modifier_tir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tir_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TirModification"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

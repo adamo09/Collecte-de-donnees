@@ -10,11 +10,13 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
 import { nombreOuNull, texteOuNull, useEcriture } from '@/utils/mutations';
 import { useSites } from '@/utils/requetes';
 
+type Equipement = components['schemas']['EquipementSortie'];
 type TypeEquipement = components['schemas']['TypeEquipement'];
 type Niveau = components['schemas']['NiveauConcassage'];
 
@@ -50,6 +52,7 @@ export default function EcranEquipements() {
   const sites = useSites();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [enEdition, setEnEdition] = useState<Equipement | null>(null);
   const [filtreSite, setFiltreSite] = useState('');
 
   const equipements = useQuery({
@@ -81,6 +84,49 @@ export default function EcranEquipements() {
     },
   });
 
+  const modification = useEcriture({
+    cles: ['equipements'],
+    action: async ({ id, corps }: { id: string; corps: Record<string, unknown> }) => {
+      const { data, error } = await api.PATCH(
+        '/api/v1/referentiels/equipements/{equipement_id}',
+        { params: { path: { equipement_id: id } }, body: corps as never },
+      );
+      if (error) throw new Error(messageErreur(error));
+      return data!;
+    },
+    messageSucces: (e) => `« ${e.designation} » mis à jour.`,
+    onSucces: () => {
+      setEnEdition(null);
+      setModaleOuverte(false);
+      setFormulaire(VIDE);
+    },
+  });
+
+  const ouvrirEdition = (equipement: Equipement) => {
+    setEnEdition(equipement);
+    setFormulaire({
+      designation: equipement.designation,
+      type: equipement.type,
+      site_id: String(equipement.site_id),
+      ligne: equipement.ligne ?? '',
+      niveau: equipement.niveau ?? '',
+      poste: equipement.poste ?? '',
+      puissance_kw: equipement.puissance_kw != null ? String(equipement.puissance_kw) : '',
+    });
+    setModaleOuverte(true);
+  };
+
+  const corps = () => ({
+    designation: formulaire.designation.trim(),
+    type: formulaire.type,
+    site_id: Number(formulaire.site_id),
+    ligne: texteOuNull(formulaire.ligne),
+    niveau: formulaire.niveau || null,
+    poste: texteOuNull(formulaire.poste),
+    puissance_kw: nombreOuNull(formulaire.puissance_kw),
+  });
+
+  const retour = creation.retour ?? modification.retour;
   const valide = formulaire.designation.trim() !== '' && formulaire.site_id !== '';
 
   return (
@@ -96,7 +142,7 @@ export default function EcranEquipements() {
         </div>
       </header>
 
-      {creation.retour && <Encart ton={creation.retour.ton}>{creation.retour.texte}</Encart>}
+      {retour && <Encart ton={retour.ton}>{retour.texte}</Encart>}
 
       <Carte>
         <div className="filtres">
@@ -113,7 +159,15 @@ export default function EcranEquipements() {
             {(equipements.data?.length ?? 0) > 1 ? 's' : ''}
           </div>
           <div className="filtres__actions">
-            <Bouton onClick={() => setModaleOuverte(true)}>Ajouter un équipement</Bouton>
+            <Bouton
+              onClick={() => {
+                setEnEdition(null);
+                setFormulaire(VIDE);
+                setModaleOuverte(true);
+              }}
+            >
+              Ajouter un équipement
+            </Bouton>
           </div>
         </div>
       </Carte>
@@ -137,6 +191,7 @@ export default function EcranEquipements() {
                   <th>Niveau</th>
                   <th className="num">Puissance</th>
                   <th>État</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -153,6 +208,17 @@ export default function EcranEquipements() {
                         {eq.actif ? 'Actif' : 'Retiré'}
                       </Pastille>
                     </td>
+                    <td>
+                      <ActionsReferentiel
+                        actif={eq.actif}
+                        libelleObjet={`« ${eq.designation} »`}
+                        enCours={modification.isPending}
+                        onModifier={() => ouvrirEdition(eq)}
+                        onBasculerActif={() =>
+                          modification.mutate({ id: eq.id, corps: { actif: !eq.actif } })
+                        }
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -162,27 +228,37 @@ export default function EcranEquipements() {
       </Carte>
 
       <Modale
-        titre="Ajouter un équipement"
+        titre={enEdition ? `Modifier « ${enEdition.designation} »` : 'Ajouter un équipement'}
         ouverte={modaleOuverte}
-        onFermer={() => setModaleOuverte(false)}
+        onFermer={() => {
+          setModaleOuverte(false);
+          setEnEdition(null);
+        }}
+        erreur={retour?.ton === 'erreur' ? retour.texte : null}
         actions={
           <>
-            <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
+              variante="secondaire"
+              onClick={() => {
+                setModaleOuverte(false);
+                setEnEdition(null);
+              }}
+            >
+              Annuler
+            </Bouton>
+            <Bouton
+              disabled={!valide || creation.isPending || modification.isPending}
               onClick={() =>
-                creation.mutate({
-                  designation: formulaire.designation.trim(),
-                  type: formulaire.type,
-                  site_id: Number(formulaire.site_id),
-                  ligne: texteOuNull(formulaire.ligne),
-                  niveau: formulaire.niveau || null,
-                  poste: texteOuNull(formulaire.poste),
-                  puissance_kw: nombreOuNull(formulaire.puissance_kw),
-                })
+                enEdition
+                  ? modification.mutate({ id: enEdition.id, corps: corps() })
+                  : creation.mutate(corps())
               }
             >
-              {creation.isPending ? 'Création…' : 'Créer'}
+              {creation.isPending || modification.isPending
+                ? 'Enregistrement…'
+                : enEdition
+                  ? 'Enregistrer'
+                  : 'Créer'}
             </Bouton>
           </>
         }

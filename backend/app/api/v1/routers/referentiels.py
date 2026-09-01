@@ -23,6 +23,16 @@ from app.models.referentiels import (
     ProduitParcours,
     Site,
 )
+from app.models.tracabilite import AuditModification
+from app.schemas.modifications import (
+    CauseArretModification,
+    CentreDeCoutModification,
+    EquipementModification,
+    PersonnelModification,
+    ProduitModification,
+    SiteModification,
+    TirModification,
+)
 from app.schemas.referentiels import (
     CauseArretEntree,
     CauseArretSortie,
@@ -42,6 +52,7 @@ from app.schemas.referentiels import (
     TirEntree,
     TirSortie,
 )
+from app.services.referentiels import appliquer_modification
 
 routeur = APIRouter(prefix="/referentiels", tags=["Référentiels"])
 
@@ -429,3 +440,195 @@ def creer_tir(session: SessionBD, _: ExigeSuperviseur, demande: TirEntree) -> Ti
         ) from erreur
     session.refresh(tir)
     return tir
+
+
+# =====================================================================
+# Modification des référentiels
+#
+# Aucun référentiel n'est supprimé : les données collectées y renvoient et
+# une suppression romprait l'historique. Un référentiel qui n'a plus cours
+# est désactivé — il disparaît des listes de saisie sans effacer le passé.
+#
+# Chaque modification est journalisée : changer le centre de coût de
+# référence d'un engin déplace des coûts dans les exports du gestionnaire,
+# et cela doit pouvoir être retracé.
+# =====================================================================
+
+
+def _modifier(
+    session,
+    objet,
+    nom_table: str,
+    cle: str,
+    demande,
+    utilisateur,
+    motif: str | None = None,
+):
+    """Applique une modification partielle, la journalise et valide."""
+    if objet is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Enregistrement inconnu."
+        )
+    appliquer_modification(
+        session,
+        objet,
+        nom_table,
+        cle,
+        demande.model_dump(exclude_unset=True, exclude_none=False),
+        utilisateur,
+        motif,
+    )
+    try:
+        session.commit()
+    except IntegrityError as erreur:
+        session.rollback()
+        raise _conflit(erreur, f"Modification refusée : {erreur.orig}") from erreur
+    session.refresh(objet)
+    return objet
+
+
+@routeur.patch("/sites/{site_id}", response_model=SiteSortie, summary="Modifier un site")
+def modifier_site(
+    session: SessionBD, utilisateur: ExigeAdmin, site_id: int, demande: SiteModification
+) -> Site:
+    return _modifier(
+        session, session.get(Site, site_id), "site", str(site_id), demande, utilisateur
+    )
+
+
+@routeur.patch(
+    "/centres-de-cout/{code}",
+    response_model=CentreDeCoutSortie,
+    summary="Modifier un centre de coûts",
+)
+def modifier_centre(
+    session: SessionBD,
+    utilisateur: ExigeAdmin,
+    code: str,
+    demande: CentreDeCoutModification,
+) -> CentreDeCout:
+    return _modifier(
+        session, session.get(CentreDeCout, code), "centre_de_cout", code, demande, utilisateur
+    )
+
+
+@routeur.patch(
+    "/personnel/{matricule}", response_model=PersonnelSortie, summary="Modifier un agent"
+)
+def modifier_personnel(
+    session: SessionBD,
+    utilisateur: ExigeAdmin,
+    matricule: str,
+    demande: PersonnelModification,
+) -> Personnel:
+    """Le matricule n'est pas modifiable : c'est la clé à laquelle chaque
+    déclaration terrain se rattache. Un agent qui part est désactivé."""
+    return _modifier(
+        session, session.get(Personnel, matricule), "personnel", matricule, demande, utilisateur
+    )
+
+
+@routeur.patch(
+    "/equipements/{equipement_id}",
+    response_model=EquipementSortie,
+    summary="Modifier un équipement",
+)
+def modifier_equipement(
+    session: SessionBD,
+    utilisateur: ExigeAdmin,
+    equipement_id: uuid.UUID,
+    demande: EquipementModification,
+) -> EquipementConcassage:
+    return _modifier(
+        session,
+        session.get(EquipementConcassage, equipement_id),
+        "equipement_concassage",
+        str(equipement_id),
+        demande,
+        utilisateur,
+    )
+
+
+@routeur.patch(
+    "/produits/{produit_id}", response_model=ProduitSortie, summary="Modifier un produit"
+)
+def modifier_produit(
+    session: SessionBD,
+    utilisateur: ExigeAdmin,
+    produit_id: uuid.UUID,
+    demande: ProduitModification,
+) -> Produit:
+    """Le parcours fourni remplace entièrement l'ancien : une séquence se
+    remplace, elle ne se modifie pas élément par élément."""
+    produit = session.get(Produit, produit_id)
+    if produit is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit inconnu.")
+
+    donnees = demande.model_dump(exclude_unset=True)
+    parcours = donnees.pop("parcours", None)
+
+    appliquer_modification(
+        session, produit, "produit", str(produit_id), donnees, utilisateur
+    )
+
+    if parcours is not None:
+        ancien = " → ".join(
+            f"{e.ordre}:{e.niveau.value if hasattr(e.niveau, 'value') else e.niveau}"
+            for e in produit.parcours
+        )
+        produit.parcours.clear()
+        session.flush()
+        for etape in parcours:
+            session.add(ProduitParcours(produit_id=produit.id, **etape))
+        session.add(
+            AuditModification(
+                table_cible="produit_parcours",
+                enregistrement=str(produit_id),
+                champ="parcours",
+                ancienne_valeur=ancien or None,
+                nouvelle_valeur=" → ".join(
+                    f"{e['ordre']}:{e['niveau']}" for e in parcours
+                ) or None,
+                auteur_id=utilisateur.id,
+            )
+        )
+
+    try:
+        session.commit()
+    except IntegrityError as erreur:
+        session.rollback()
+        raise _conflit(
+            erreur, "Modification refusée : le parcours comporte deux fois le même niveau."
+        ) from erreur
+    session.refresh(produit)
+    return produit
+
+
+@routeur.patch(
+    "/causes-arret/{code}",
+    response_model=CauseArretSortie,
+    summary="Modifier un motif d'arrêt",
+)
+def modifier_cause(
+    session: SessionBD,
+    utilisateur: ExigeSuperviseur,
+    code: str,
+    demande: CauseArretModification,
+) -> CauseArret:
+    """Le code n'est pas modifiable : les événements déjà déclarés y
+    renvoient, et le renommer fausserait toute statistique d'arrêts."""
+    return _modifier(
+        session, session.get(CauseArret, code), "cause_arret", code, demande, utilisateur
+    )
+
+
+@routeur.patch("/tirs/{tir_id}", response_model=TirSortie, summary="Modifier un tir")
+def modifier_tir(
+    session: SessionBD,
+    utilisateur: ExigeSuperviseur,
+    tir_id: uuid.UUID,
+    demande: TirModification,
+) -> Tir:
+    return _modifier(
+        session, session.get(Tir, tir_id), "tir", str(tir_id), demande, utilisateur
+    )

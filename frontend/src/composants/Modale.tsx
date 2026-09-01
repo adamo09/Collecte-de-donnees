@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 
+import { Encart } from '@/composants/Communs';
 import './Modale.css';
 
 export function Modale({
@@ -12,6 +13,7 @@ export function Modale({
   children,
   actions,
   largeur = 520,
+  erreur,
 }: {
   titre: string;
   aide?: string;
@@ -20,6 +22,10 @@ export function Modale({
   children: ReactNode;
   actions?: ReactNode;
   largeur?: number;
+  /** Erreur d'écriture, affichée DANS la modale. Rendue derrière le fond
+   *  assombri, elle serait invisible : l'utilisateur verrait le formulaire
+   *  rester ouvert sans la moindre explication. */
+  erreur?: string | null;
 }) {
   const dialogue = useRef<HTMLDialogElement>(null);
 
@@ -62,7 +68,10 @@ export function Modale({
           </button>
         </header>
 
-        <div className="modale__corps">{children}</div>
+        <div className="modale__corps">
+          {erreur && <Encart ton="erreur">{erreur}</Encart>}
+          {children}
+        </div>
 
         {actions && <footer className="modale__pied">{actions}</footer>}
       </form>

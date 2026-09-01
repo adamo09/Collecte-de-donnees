@@ -174,6 +174,7 @@ export default function EcranComptes() {
         aide="Le mot de passe est communiqué à l'intéressé, qui pourra le changer lui-même."
         ouverte={modaleOuverte}
         onFermer={() => setModaleOuverte(false)}
+        erreur={creation.retour?.ton === 'erreur' ? creation.retour.texte : null}
         actions={
           <>
             <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>

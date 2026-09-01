@@ -82,6 +82,10 @@ class EnginEntree(SchemaEntree):
 
 
 class EnginModification(SchemaEntree):
+    # La famille est modifiable : un mauvais choix à la création doit
+    # pouvoir être corrigé, et le numéro de parc étant unique, on ne peut
+    # pas simplement recréer la fiche. Le changement est journalisé.
+    famille: FamilleEngin | None = None
     matricule: str | None = None
     type_engin: str | None = None
     marque: str | None = None

@@ -1365,6 +1365,411 @@
     }
    }
   },
+  "/api/v1/referentiels/sites/{site_id}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un site",
+    "operationId": "referentiels_modifier_site",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "site_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Site Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SiteModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SiteSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/referentiels/centres-de-cout/{code}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un centre de coûts",
+    "operationId": "referentiels_modifier_centre",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "code",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Code"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CentreDeCoutModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CentreDeCoutSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/referentiels/personnel/{matricule}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un agent",
+    "description": "Le matricule n'est pas modifiable : c'est la clé à laquelle chaque\ndéclaration terrain se rattache. Un agent qui part est désactivé.",
+    "operationId": "referentiels_modifier_personnel",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "matricule",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Matricule"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersonnelModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PersonnelSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/referentiels/equipements/{equipement_id}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un équipement",
+    "operationId": "referentiels_modifier_equipement",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "equipement_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Equipement Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EquipementModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EquipementSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/referentiels/produits/{produit_id}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un produit",
+    "description": "Le parcours fourni remplace entièrement l'ancien : une séquence se\nremplace, elle ne se modifie pas élément par élément.",
+    "operationId": "referentiels_modifier_produit",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "produit_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Produit Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProduitModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ProduitSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/referentiels/causes-arret/{code}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un motif d'arrêt",
+    "description": "Le code n'est pas modifiable : les événements déjà déclarés y\nrenvoient, et le renommer fausserait toute statistique d'arrêts.",
+    "operationId": "referentiels_modifier_cause",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "code",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Code"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CauseArretModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CauseArretSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/referentiels/tirs/{tir_id}": {
+   "patch": {
+    "tags": [
+     "Référentiels"
+    ],
+    "summary": "Modifier un tir",
+    "operationId": "referentiels_modifier_tir",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "tir_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Tir Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TirModification"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TirSortie"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/synchronisation/lots": {
    "post": {
     "tags": [
@@ -5534,6 +5939,47 @@
     ],
     "title": "CauseArretEntree"
    },
+   "CauseArretModification": {
+    "properties": {
+     "libelle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Libelle"
+     },
+     "categorie": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Categorie"
+     },
+     "actif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actif"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "CauseArretModification",
+    "description": "Le code n'est pas modifiable : les événements déjà déclarés y\nrenvoient, et le renommer fausserait toute statistique d'arrêts."
+   },
    "CauseArretSortie": {
     "properties": {
      "code": {
@@ -5593,6 +6039,35 @@
      "libelle"
     ],
     "title": "CentreDeCoutEntree"
+   },
+   "CentreDeCoutModification": {
+    "properties": {
+     "libelle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Libelle"
+     },
+     "actif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actif"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "CentreDeCoutModification"
    },
    "CentreDeCoutSortie": {
     "properties": {
@@ -6313,6 +6788,16 @@
    },
    "EnginModification": {
     "properties": {
+     "famille": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/FamilleEngin"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "matricule": {
       "anyOf": [
        {
@@ -6752,6 +7237,104 @@
      "site_id"
     ],
     "title": "EquipementEntree"
+   },
+   "EquipementModification": {
+    "properties": {
+     "designation": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Designation"
+     },
+     "type": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/TypeEquipement"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "site_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Site Id"
+     },
+     "ligne": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ligne"
+     },
+     "niveau": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/NiveauConcassage"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "poste": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Poste"
+     },
+     "puissance_kw": {
+      "anyOf": [
+       {
+        "type": "number",
+        "minimum": 0.0
+       },
+       {
+        "type": "string",
+        "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Puissance Kw"
+     },
+     "actif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actif"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "EquipementModification"
    },
    "EquipementSortie": {
     "properties": {
@@ -8481,6 +9064,93 @@
     ],
     "title": "PersonnelEntree"
    },
+   "PersonnelModification": {
+    "properties": {
+     "nom_prenoms": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nom Prenoms"
+     },
+     "fonction": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fonction"
+     },
+     "site_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Site Id"
+     },
+     "centre_cout": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Centre Cout"
+     },
+     "date_debut_affect": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date Debut Affect"
+     },
+     "date_fin_affect": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date Fin Affect"
+     },
+     "actif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actif"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "PersonnelModification",
+    "description": "Le matricule n'est pas modifiable : c'est la clé à laquelle chaque\ndéclaration terrain se rattache."
+   },
    "PersonnelSortie": {
     "properties": {
      "matricule": {
@@ -9210,6 +9880,73 @@
     ],
     "title": "ProduitEntree"
    },
+   "ProduitModification": {
+    "properties": {
+     "libelle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Libelle"
+     },
+     "site_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Site Id"
+     },
+     "granulometrie": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Granulometrie"
+     },
+     "actif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actif"
+     },
+     "parcours": {
+      "anyOf": [
+       {
+        "items": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parcours"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "ProduitModification",
+    "description": "Le code n'est pas modifiable : il est repris par les pesées et les\nventes déjà enregistrées."
+   },
    "ProduitParcoursEntree": {
     "properties": {
      "ordre": {
@@ -9801,6 +10538,35 @@
     ],
     "title": "SiteEntree"
    },
+   "SiteModification": {
+    "properties": {
+     "libelle": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Libelle"
+     },
+     "actif": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actif"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "SiteModification"
+   },
    "SiteSortie": {
     "properties": {
      "id": {
@@ -10185,6 +10951,38 @@
      "site_id"
     ],
     "title": "TirEntree"
+   },
+   "TirModification": {
+    "properties": {
+     "numero_t": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 16,
+        "minLength": 1
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Numero T"
+     },
+     "date_tir": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date Tir"
+     }
+    },
+    "additionalProperties": false,
+    "type": "object",
+    "title": "TirModification"
    },
    "TirSortie": {
     "properties": {

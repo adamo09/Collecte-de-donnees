@@ -11,9 +11,13 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { Modale } from '@/composants/Modale';
+import type { components } from '@/api/schema';
 import { texteOuNull, useEcriture } from '@/utils/mutations';
 import { useSites } from '@/utils/requetes';
+
+type CauseArret = components['schemas']['CauseArretSortie'];
 
 const CATEGORIES = ['technique', 'organisationnel', 'externe'] as const;
 
@@ -23,6 +27,7 @@ export default function EcranNomenclatures() {
   const [modaleCause, setModaleCause] = useState(false);
   const [tir, setTir] = useState({ numero_t: '', site_id: '', date_tir: '' });
   const [cause, setCause] = useState({ code: '', libelle: '', categorie: 'technique' });
+  const [causeEnEdition, setCauseEnEdition] = useState<CauseArret | null>(null);
 
   const tirs = useQuery({
     queryKey: ['tirs'],
@@ -76,6 +81,31 @@ export default function EcranNomenclatures() {
     },
   });
 
+  const modifierCause = useEcriture({
+    cles: ['causes-arret'],
+    action: async ({ code, corps }: { code: string; corps: Record<string, unknown> }) => {
+      const { data, error } = await api.PATCH('/api/v1/referentiels/causes-arret/{code}', {
+        params: { path: { code } },
+        body: corps as never,
+      });
+      if (error) throw new Error(messageErreur(error));
+      return data!;
+    },
+    messageSucces: (c) =>
+      `Motif ${c.code} mis à jour${c.actif ? '' : ' et retiré des listes de saisie'}.`,
+    onSucces: () => {
+      setCauseEnEdition(null);
+      setModaleCause(false);
+      setCause({ code: '', libelle: '', categorie: 'technique' });
+    },
+  });
+
+  const ouvrirEditionCause = (c: CauseArret) => {
+    setCauseEnEdition(c);
+    setCause({ code: c.code, libelle: c.libelle, categorie: c.categorie ?? 'technique' });
+    setModaleCause(true);
+  };
+
   return (
     <>
       <header className="page__tete">
@@ -90,7 +120,11 @@ export default function EcranNomenclatures() {
       </header>
 
       {creerTir.retour && <Encart ton={creerTir.retour.ton}>{creerTir.retour.texte}</Encart>}
-      {creerCause.retour && <Encart ton={creerCause.retour.ton}>{creerCause.retour.texte}</Encart>}
+      {(creerCause.retour ?? modifierCause.retour) && (
+        <Encart ton={(creerCause.retour ?? modifierCause.retour)!.ton}>
+          {(creerCause.retour ?? modifierCause.retour)!.texte}
+        </Encart>
+      )}
 
       <Carte
         titre="Tirs"
@@ -124,7 +158,17 @@ export default function EcranNomenclatures() {
       <Carte
         titre="Motifs d'arrêt"
         aide="Liste fermée mais enrichissable. Un motif libre reste possible, mais doit rester l'exception."
-        actions={<Bouton onClick={() => setModaleCause(true)}>Ajouter un motif</Bouton>}
+        actions={
+          <Bouton
+            onClick={() => {
+              setCauseEnEdition(null);
+              setCause({ code: '', libelle: '', categorie: 'technique' });
+              setModaleCause(true);
+            }}
+          >
+            Ajouter un motif
+          </Bouton>
+        }
       >
         {causes.isPending ? (
           <Chargement />
@@ -132,7 +176,7 @@ export default function EcranNomenclatures() {
           <div className="tableau-enveloppe">
             <table className="tableau">
               <thead>
-                <tr><th>Code</th><th>Libellé</th><th>Catégorie</th><th>État</th></tr>
+                <tr><th>Code</th><th>Libellé</th><th>Catégorie</th><th>État</th><th /></tr>
               </thead>
               <tbody>
                 {causes.data!.map((c) => (
@@ -156,6 +200,17 @@ export default function EcranNomenclatures() {
                       <Pastille ton={c.actif ? 'succes' : 'neutre'}>
                         {c.actif ? 'Actif' : 'Retiré'}
                       </Pastille>
+                    </td>
+                    <td>
+                      <ActionsReferentiel
+                        actif={c.actif}
+                        libelleObjet={`Le motif « ${c.libelle} »`}
+                        enCours={modifierCause.isPending}
+                        onModifier={() => ouvrirEditionCause(c)}
+                        onBasculerActif={() =>
+                          modifierCause.mutate({ code: c.code, corps: { actif: !c.actif } })
+                        }
+                      />
                     </td>
                   </tr>
                 ))}
@@ -215,24 +270,61 @@ export default function EcranNomenclatures() {
       </Modale>
 
       <Modale
-        titre="Ajouter un motif d'arrêt"
-        aide="Le code sert de clé : court, en majuscules, stable dans le temps."
+        titre={causeEnEdition ? `Modifier ${causeEnEdition.code}` : "Ajouter un motif d'arrêt"}
+        aide={
+          causeEnEdition
+            ? "Le code n'est pas modifiable : les événements déjà déclarés y renvoient, et le renommer fausserait toute statistique d'arrêts."
+            : 'Le code sert de clé : court, en majuscules, stable dans le temps.'
+        }
         ouverte={modaleCause}
-        onFermer={() => setModaleCause(false)}
+        onFermer={() => {
+          setModaleCause(false);
+          setCauseEnEdition(null);
+        }}
+        erreur={
+          (causeEnEdition ? modifierCause.retour : creerCause.retour)?.ton === 'erreur'
+            ? (causeEnEdition ? modifierCause.retour : creerCause.retour)?.texte
+            : null
+        }
         actions={
           <>
-            <Bouton variante="secondaire" onClick={() => setModaleCause(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!cause.code.trim() || !cause.libelle.trim() || creerCause.isPending}
+              variante="secondaire"
+              onClick={() => {
+                setModaleCause(false);
+                setCauseEnEdition(null);
+              }}
+            >
+              Annuler
+            </Bouton>
+            <Bouton
+              disabled={
+                !cause.code.trim() ||
+                !cause.libelle.trim() ||
+                creerCause.isPending ||
+                modifierCause.isPending
+              }
               onClick={() =>
-                creerCause.mutate({
-                  code: cause.code.trim().toUpperCase(),
-                  libelle: cause.libelle.trim(),
-                  categorie: cause.categorie,
-                })
+                causeEnEdition
+                  ? modifierCause.mutate({
+                      code: causeEnEdition.code,
+                      corps: {
+                        libelle: cause.libelle.trim(),
+                        categorie: cause.categorie,
+                      },
+                    })
+                  : creerCause.mutate({
+                      code: cause.code.trim().toUpperCase(),
+                      libelle: cause.libelle.trim(),
+                      categorie: cause.categorie,
+                    })
               }
             >
-              {creerCause.isPending ? 'Ajout…' : 'Ajouter'}
+              {creerCause.isPending || modifierCause.isPending
+                ? 'Enregistrement…'
+                : causeEnEdition
+                  ? 'Enregistrer'
+                  : 'Ajouter'}
             </Bouton>
           </>
         }
@@ -243,7 +335,8 @@ export default function EcranNomenclatures() {
               value={cause.code}
               onChange={(e) => setCause({ ...cause, code: e.target.value })}
               placeholder="PANNE_BOITE"
-              autoFocus
+              autoFocus={!causeEnEdition}
+              disabled={causeEnEdition !== null}
             />
           </Champ>
           <Champ libelle="Libellé *">

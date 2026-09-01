@@ -10,16 +10,18 @@ sert à valider la chaîne complète avant l'inventaire physique du parc.
 
 import argparse
 import sys
+import time
 import uuid
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import inspect, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import parametres
 from app.core.securite import hacher_mot_de_passe
-from app.db.session import FabriqueSession
+from app.db.session import FabriqueSession, moteur
 from app.models.collecte import EvenementEngin, RotationDumper, Tir, TrouForage
 from app.models.enums import (
     FamilleEngin,
@@ -310,6 +312,34 @@ def charger_demonstration(session: Session, admin: Utilisateur) -> None:
     print("  Jeu de démonstration chargé sur le site KOS (mot de passe : caderac2026).")
 
 
+def attendre_schema(secondes: int = 60) -> bool:
+    """Attend que les migrations aient créé le schéma.
+
+    Lancé juste après « docker compose up », l'amorçage peut arriver
+    pendant que le conteneur joue encore « alembic upgrade head ». Sans
+    cette attente, l'exploitant reçoit une trace SQLAlchemy illisible là
+    où il n'y a qu'un décalage de quelques secondes.
+    """
+    limite = time.monotonic() + secondes
+    annonce = False
+    while time.monotonic() < limite:
+        try:
+            if "utilisateur" in inspect(moteur).get_table_names():
+                if annonce:
+                    print(" prêt.")
+                return True
+        except SQLAlchemyError:
+            pass  # base pas encore joignable
+        if not annonce:
+            print("  Migrations en cours…", end="", flush=True)
+            annonce = True
+        print(".", end="", flush=True)
+        time.sleep(2)
+    if annonce:
+        print()
+    return False
+
+
 def principal() -> int:
     analyseur = argparse.ArgumentParser(description="Amorçage de la base CADERAC.")
     analyseur.add_argument(
@@ -317,9 +347,27 @@ def principal() -> int:
         action="store_true",
         help="Charger un parc réduit et quelques journées de collecte.",
     )
+    analyseur.add_argument(
+        "--attente",
+        type=int,
+        default=60,
+        help="Secondes d'attente du schéma avant d'abandonner (0 pour ne pas attendre).",
+    )
     arguments = analyseur.parse_args()
 
     print("Amorçage de la base CADERAC…")
+
+    if not attendre_schema(arguments.attente):
+        print(
+            "  Le schéma est absent de la base : aucune table « utilisateur ».\n"
+            "  Appliquer d'abord les migrations :\n"
+            "      alembic upgrade head\n"
+            "  Sous Docker, le conteneur api le fait au démarrage ; attendre\n"
+            "  qu'il ait fini (docker compose logs -f api).",
+            file=sys.stderr,
+        )
+        return 2
+
     with FabriqueSession() as session:
         admin = creer_administrateur(session)
         if arguments.demonstration:

@@ -79,6 +79,14 @@ class Client:
             print(f"\n{ROUGE}Serveur injoignable sur {self.url}{FIN}")
             print(f"{GRIS}{erreur}{FIN}")
             raise SystemExit(2) from erreur
+        if reponse.status_code >= 500:
+            # Le serveur répond mais quelque chose derrière ne va pas —
+            # typiquement la base. Le dire, plutôt que de laisser croire à
+            # un problème de compte.
+            print(f"\n{ROUGE}Le serveur répond mais renvoie une erreur "
+                  f"{reponse.status_code}.{FIN}")
+            print(f"{GRIS}Vérifier la base : curl {self.url.rsplit('/api/', 1)[0]}/sante{FIN}")
+            raise SystemExit(2)
         if reponse.status_code != 200:
             return False
         self.jetons[role] = reponse.json()["access_token"]
@@ -115,8 +123,12 @@ def principal() -> int:
     titre("0.", "Mise en place")
     # =================================================================
     if not client.connecter("admin", arguments.admin_login, arguments.admin_mot_de_passe):
-        print(f"{ROUGE}Connexion administrateur impossible. "
-              f"Lancer d'abord : python -m app.db.seed{FIN}")
+        print(f"{ROUGE}Connexion administrateur refusée "
+              f"(login « {arguments.admin_login} »).{FIN}")
+        print(f"{GRIS}Si le compte n'existe pas encore :"
+              f" python -m app.db.seed{FIN}")
+        print(f"{GRIS}S'il a un autre mot de passe :"
+              f" --admin-login … --admin-mot-de-passe …{FIN}")
         return 2
     verifier(True, "Connexion administrateur")
 

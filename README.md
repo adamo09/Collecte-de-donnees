@@ -115,8 +115,8 @@ cd backend && pytest -q          # 65 tests, sur PostgreSQL réel
 cd mobile  && npm test           # tests de la construction des lots
 cd mobile  && npm run verifier-types
 
-# Recette de bout en bout, serveur démarré — c'est celle à montrer
-python scripts/recette.py
+# Recette de bout en bout — c'est celle à montrer au commanditaire
+docker compose exec api python /scripts/recette.py --url http://localhost:8000/api/v1
 ```
 
 Le guide complet est dans [`docs/tests.md`](docs/tests.md).

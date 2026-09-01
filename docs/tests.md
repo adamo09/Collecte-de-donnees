@@ -83,6 +83,21 @@ npm test                  # construction des lots de synchronisation
 
 C'est le niveau à montrer au commanditaire.
 
+### Avec Docker — rien à installer sur le poste
+
+`docker compose up` migre la base, crée le compte administrateur et démarre
+l'API. Depuis un **second terminal** :
+
+```bash
+# Jeu de démonstration (facultatif mais recommandé)
+docker compose exec api python -m app.db.seed --demonstration
+
+# La recette, exécutée depuis le conteneur qui porte déjà ses dépendances
+docker compose exec api python /scripts/recette.py --url http://localhost:8000/api/v1
+```
+
+### Sans Docker
+
 ```bash
 # 1. Préparer la base et le compte administrateur
 cd backend
@@ -94,7 +109,7 @@ uvicorn app.main:app --reload
 
 # 3. Dans un autre terminal, lancer la recette
 cd ..
-pip install httpx
+pip install httpx          # sous Ubuntu 24.04, passer par un venv
 python scripts/recette.py
 ```
 

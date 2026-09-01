@@ -38,6 +38,10 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      # Le scénario de recette est monté en lecture seule : il s'exécute
+      # depuis le conteneur, qui porte déjà ses dépendances. Rien à
+      # installer sur le poste de l'exploitant.
+      - ./scripts:/scripts:ro
     command: >
       sh -c "alembic upgrade head &&
              python -m app.db.seed &&

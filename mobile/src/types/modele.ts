@@ -39,8 +39,27 @@ export type TypeEvenementEngin =
   | 'fin'
   | 'ravitaillement';
 
-/** Types d'événements pour lesquels un motif codifié est obligatoire. */
+export type TypeEvenementEquipement =
+  | 'marche_a_charge'
+  | 'marche_a_vide'
+  | 'arret'
+  | 'panne'
+  | 'maintenance'
+  | 'reprise'
+  | 'fin';
+
+/** Types d'événements pour lesquels un motif codifié est obligatoire.
+ *
+ *  Un arrêt sans cause codifiée n'est pas exploitable statistiquement :
+ *  « panne », « panne moteur » et « pb moteur » deviendraient trois motifs
+ *  distincts (ch. 4.4). */
 export const EVENEMENTS_AVEC_CAUSE: readonly TypeEvenementEngin[] = [
+  'arret',
+  'panne',
+  'maintenance',
+];
+
+export const EVENEMENTS_EQUIPEMENT_AVEC_CAUSE: readonly TypeEvenementEquipement[] = [
   'arret',
   'panne',
   'maintenance',

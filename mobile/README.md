@@ -65,9 +65,23 @@ locale du référentiel.
 ## Périmètre
 
 Le pilote porte sur **un site unique et deux modules** — foration et
-rotations de dumpers (ch. 14). Les événements engins et l'écran de
-synchronisation complètent le socle sans élargir le périmètre.
+rotations de dumpers (ch. 14).
 
-Non couverts par l'application mobile en V1, car relevant du back-office :
-minage, concassage, pont-bascule, ventes, charges. Le contrat de
-synchronisation les accepte déjà — seuls les écrans manquent.
+La barre d'onglets met donc en avant ces deux modules, les événements
+engins et la file d'envoi. Le concassage et le pont-bascule sont
+développés et opérationnels, mais rangés derrière **Autres saisies** :
+élargir le périmètre avant que la collecte des deux premiers modules soit
+installée multiplierait les risques sans accélérer l'apprentissage, et un
+conducteur de dumper n'a pas à rencontrer six choix dont cinq ne le
+concernent pas.
+
+| Onglet | Module |
+|---|---|
+| **Rotations** | CP03 — grille de boutons, un appui par passage |
+| **Foration** | CP01 — cycle en deux scans |
+| **Engins** | Journal d'événements, tous engins |
+| **Autres saisies** | Concassage et pont-bascule, hors pilote |
+| **File d'envoi** | Synchronisation et diagnostic |
+
+Restent au back-office, car ne venant pas du terrain : minage, ventes,
+charges engin, sorties magasin.

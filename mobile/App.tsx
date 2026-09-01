@@ -2,8 +2,10 @@
  * CADERAC — Application de collecte terrain.
  *
  * Le pilote porte sur un site unique et deux modules — foration et rotations
- * de dumpers (ch. 14). Les événements engins et l'écran de synchronisation
- * complètent le socle sans élargir le périmètre fonctionnel.
+ * de dumpers (ch. 14). Les autres écrans sont présents mais n'ont pas
+ * vocation à être déployés d'emblée : élargir le périmètre avant que la
+ * collecte des deux premiers modules soit installée multiplierait les
+ * risques sans accélérer l'apprentissage.
  */
 
 import React from 'react';
@@ -14,6 +16,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { FournisseurSession, useSession } from '@/contextes/Session';
+import EcranAutresSaisies from '@/ecrans/AutresSaisies';
 import EcranConnexion from '@/ecrans/Connexion';
 import EcranEvenementsEngin from '@/ecrans/EvenementsEngin';
 import EcranForation from '@/ecrans/Foration';
@@ -63,6 +66,11 @@ function Navigation() {
         name="Engins"
         component={EcranEvenementsEngin}
         options={{ title: 'Événements engins' }}
+      />
+      <Onglets.Screen
+        name="Autres"
+        component={EcranAutresSaisies}
+        options={{ title: 'Autres saisies' }}
       />
       <Onglets.Screen
         name="Envoi"

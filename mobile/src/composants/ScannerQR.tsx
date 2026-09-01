@@ -14,18 +14,26 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import { Bandeau, Bouton, Champ } from '@/composants/Communs';
 import { useSession } from '@/contextes/Session';
-import type { Engin, FamilleEngin } from '@/types/modele';
+import type { Engin, Equipement, FamilleEngin } from '@/types/modele';
 import { CIBLE_TACTILE, couleurs, espacement, rayons } from '@/utils/theme';
+
+/** Le scan sert aux engins comme aux équipements de concassage : mêmes
+ *  étiquettes, mêmes contraintes de terrain, même repli manuel. */
+type Cible = 'engin' | 'equipement';
 
 export default function ScannerQR({
   titre,
   familles,
+  cible = 'engin',
   onEngin,
+  onEquipement,
   onAnnuler,
 }: {
   titre: string;
   familles?: FamilleEngin[];
-  onEngin: (engin: Engin) => void;
+  cible?: Cible;
+  onEngin?: (engin: Engin) => void;
+  onEquipement?: (equipement: Equipement) => void;
   onAnnuler: () => void;
 }) {
   const { parametrage } = useSession();
@@ -35,18 +43,40 @@ export default function ScannerQR({
   const [erreur, setErreur] = useState<string | null>(null);
   const [dejaLu, setDejaLu] = useState(false);
 
+  /** Liste des cibles possibles, réduite au strict nécessaire : une liste
+   *  de repli qui compte cent lignes n'est pas un repli utilisable. */
   const candidats = useMemo(() => {
-    const tous = parametrage?.engins ?? [];
-    return familles ? tous.filter((e) => familles.includes(e.famille)) : tous;
-  }, [parametrage, familles]);
+    if (cible === 'equipement') {
+      return (parametrage?.equipements ?? []).map((e) => ({
+        id: e.id,
+        cle: e.designation,
+        detail: [e.type, e.niveau, e.ligne].filter(Boolean).join(' · '),
+        qr_token: e.qr_token,
+        brut: e as Engin | Equipement,
+      }));
+    }
+    const engins = parametrage?.engins ?? [];
+    const retenus = familles ? engins.filter((e) => familles.includes(e.famille)) : engins;
+    return retenus.map((e) => ({
+      id: e.id,
+      cle: e.numero_parc,
+      detail: [e.famille, e.matricule].filter(Boolean).join(' · '),
+      qr_token: e.qr_token,
+      brut: e as Engin | Equipement,
+    }));
+  }, [parametrage, familles, cible]);
+
+  const choisir = (brut: Engin | Equipement) => {
+    if (cible === 'equipement') onEquipement?.(brut as Equipement);
+    else onEngin?.(brut as Engin);
+  };
 
   const filtres = useMemo(() => {
     const terme = recherche.trim().toUpperCase();
     if (!terme) return candidats;
     return candidats.filter(
-      (e) =>
-        e.numero_parc.toUpperCase().includes(terme) ||
-        (e.matricule ?? '').toUpperCase().includes(terme),
+      (c) =>
+        c.cle.toUpperCase().includes(terme) || c.detail.toUpperCase().includes(terme),
     );
   }, [candidats, recherche]);
 
@@ -56,17 +86,19 @@ export default function ScannerQR({
 
     // La résolution se fait sur le référentiel local : le scan doit
     // fonctionner sans réseau.
-    const engin = candidats.find((e) => e.qr_token === valeur);
-    if (!engin) {
+    const trouve = candidats.find((c) => c.qr_token === valeur);
+    if (!trouve) {
       setErreur(
-        "Étiquette inconnue ou engin d'une autre famille. " +
-          'Utiliser la saisie du numéro de parc.',
+        cible === 'equipement'
+          ? "Étiquette inconnue sur ce site. Choisir l'équipement dans la liste."
+          : "Étiquette inconnue ou engin d'une autre famille. " +
+            'Utiliser la saisie du numéro de parc.',
       );
       setMode('manuel');
       setDejaLu(false);
       return;
     }
-    onEngin(engin);
+    choisir(trouve.brut);
   };
 
   if (mode === 'camera') {
@@ -128,33 +160,30 @@ export default function ScannerQR({
         {erreur ? <Bandeau ton="alerte" texte={erreur} /> : null}
 
         <Champ
-          libelle="Numéro de parc"
+          libelle={cible === 'equipement' ? 'Rechercher un équipement' : 'Numéro de parc'}
           value={recherche}
           onChangeText={(valeur) => {
             setRecherche(valeur);
             setErreur(null);
           }}
-          autoCapitalize="characters"
-          placeholder="DU01, FE02…"
+          autoCapitalize={cible === 'equipement' ? 'none' : 'characters'}
+          placeholder={cible === 'equipement' ? 'Concasseur, crible…' : 'DU01, FE02…'}
           aide="Repli lorsque l'étiquette QR est absente ou illisible."
         />
 
         <FlatList
           data={filtres}
-          keyExtractor={(engin) => engin.id}
+          keyExtractor={(item) => item.id}
           ListEmptyComponent={
-            <Text style={styles.info}>Aucun engin ne correspond à cette recherche.</Text>
+            <Text style={styles.info}>Rien ne correspond à cette recherche.</Text>
           }
           renderItem={({ item }) => (
             <Pressable
-              onPress={() => onEngin(item)}
+              onPress={() => choisir(item.brut)}
               style={({ pressed }) => [styles.ligne, pressed && styles.lignePressee]}
             >
-              <Text style={styles.lignParc}>{item.numero_parc}</Text>
-              <Text style={styles.ligneDetail}>
-                {item.famille}
-                {item.matricule ? ` · ${item.matricule}` : ''}
-              </Text>
+              <Text style={styles.lignParc}>{item.cle}</Text>
+              {item.detail ? <Text style={styles.ligneDetail}>{item.detail}</Text> : null}
             </Pressable>
           )}
         />

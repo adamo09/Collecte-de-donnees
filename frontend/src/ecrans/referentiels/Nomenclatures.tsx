@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
-import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { Bouton, Carte, Champ, Chargement, Encart, Manques, Pastille, Vide } from '@/composants/Communs';
 import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
@@ -105,6 +105,14 @@ export default function EcranNomenclatures() {
     setCause({ code: c.code, libelle: c.libelle, categorie: c.categorie ?? 'technique' });
     setModaleCause(true);
   };
+
+  const manquesCause: string[] = [];
+  if (cause.code.trim() === '') manquesCause.push('code');
+  if (cause.libelle.trim() === '') manquesCause.push('libellé');
+
+  const manquesTir: string[] = [];
+  if (tir.numero_t.trim() === '') manquesTir.push('numéro de tir');
+  if (tir.site_id === '') manquesTir.push('site');
 
   return (
     <>
@@ -226,9 +234,10 @@ export default function EcranNomenclatures() {
         onFermer={() => setModaleTir(false)}
         actions={
           <>
+            <Manques manques={manquesTir} />
             <Bouton variante="secondaire" onClick={() => setModaleTir(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!tir.numero_t.trim() || !tir.site_id || creerTir.isPending}
+              disabled={manquesTir.length > 0 || creerTir.isPending}
               onClick={() =>
                 creerTir.mutate({
                   numero_t: tir.numero_t.trim().toUpperCase(),
@@ -288,6 +297,7 @@ export default function EcranNomenclatures() {
         }
         actions={
           <>
+            <Manques manques={manquesCause} />
             <Bouton
               variante="secondaire"
               onClick={() => {
@@ -299,10 +309,7 @@ export default function EcranNomenclatures() {
             </Bouton>
             <Bouton
               disabled={
-                !cause.code.trim() ||
-                !cause.libelle.trim() ||
-                creerCause.isPending ||
-                modifierCause.isPending
+                manquesCause.length > 0 || creerCause.isPending || modifierCause.isPending
               }
               onClick={() =>
                 causeEnEdition

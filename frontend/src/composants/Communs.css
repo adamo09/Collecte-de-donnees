@@ -139,3 +139,16 @@
 /* Actions groupées en fin de ligne de tableau. */
 .actions-ligne { display: flex; gap: 6px; justify-content: flex-end; }
 .actions-ligne .bouton { padding: 4px 10px; font-size: 13px; }
+
+/* Motifs de blocage d'un bouton d'envoi. Placés dans le pied de modale,
+   ils poussent les actions vers la droite et restent lisibles à gauche. */
+.manques {
+  margin: 0 auto 0 0;
+  align-self: center;
+  max-width: 46ch;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--rouille);
+  text-align: left;
+}
+.manques__tete { font-weight: 700; }

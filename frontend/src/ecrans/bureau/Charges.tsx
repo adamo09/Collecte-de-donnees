@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, StatutPastille, Vide, jourCourt,
+  Bouton, Carte, Champ, Chargement, Encart, Manques, StatutPastille, Vide, jourCourt,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
@@ -77,7 +77,10 @@ export default function EcranCharges() {
 
   const periodeIncomplete =
     Boolean(formulaire.periode_debut) !== Boolean(formulaire.periode_fin);
-  const valide = formulaire.engin_id !== '' && formulaire.categorie !== '' && !periodeIncomplete;
+  const manques: string[] = [];
+  if (formulaire.engin_id === '') manques.push('engin');
+  if (formulaire.categorie === '') manques.push('catégorie');
+  if (periodeIncomplete) manques.push('période (les deux bornes ou aucune)');
 
   return (
     <>
@@ -176,9 +179,10 @@ export default function EcranCharges() {
         largeur={620}
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
+              disabled={manques.length > 0 || creation.isPending}
               onClick={() =>
                 creation.mutate({
                   engin_id: formulaire.engin_id,

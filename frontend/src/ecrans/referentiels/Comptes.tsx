@@ -9,7 +9,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
-import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import {
+  Bouton, Carte, Champ, Chargement, Encart, Manques, Pastille, Vide, manqueLongueur,
+} from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
 import { texteOuNull, useEcriture } from '@/utils/mutations';
@@ -79,11 +81,18 @@ export default function EcranComptes() {
   const retour = creation.retour ?? basculerActif.retour;
   const roleChoisi = ROLES.find((r) => r.valeur === formulaire.role);
   const siteRequis = formulaire.role === 'agent_terrain' || formulaire.role === 'superviseur';
-  const valide =
-    formulaire.login.trim().length >= 3 &&
-    formulaire.mot_de_passe.length >= 8 &&
-    formulaire.nom_complet.trim() !== '' &&
-    (!siteRequis || formulaire.site_id !== '');
+
+  // Les longueurs sont annoncées chiffre en main : « mot de passe » tout
+  // court laisserait croire que le champ est vide alors qu'il contient
+  // cinq caractères hérités d'un remplissage automatique du navigateur.
+  const manques: string[] = [];
+  const login = formulaire.login.trim();
+  if (login.length < 3) manques.push(manqueLongueur('identifiant', login.length, 3));
+  if (formulaire.mot_de_passe.length < 8) {
+    manques.push(manqueLongueur('mot de passe', formulaire.mot_de_passe.length, 8));
+  }
+  if (formulaire.nom_complet.trim() === '') manques.push('nom complet');
+  if (siteRequis && formulaire.site_id === '') manques.push('site');
 
   return (
     <>
@@ -177,9 +186,10 @@ export default function EcranComptes() {
         erreur={creation.retour?.ton === 'erreur' ? creation.retour.texte : null}
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
+              disabled={manques.length > 0 || creation.isPending}
               onClick={() =>
                 creation.mutate({
                   login: formulaire.login.trim().toLowerCase(),
@@ -202,6 +212,8 @@ export default function EcranComptes() {
               value={formulaire.login}
               onChange={(e) => setFormulaire({ ...formulaire, login: e.target.value })}
               placeholder="agent.kos"
+              name="nouveau-login"
+              autoComplete="off"
               autoFocus
             />
           </Champ>
@@ -210,6 +222,8 @@ export default function EcranComptes() {
               type="password"
               value={formulaire.mot_de_passe}
               onChange={(e) => setFormulaire({ ...formulaire, mot_de_passe: e.target.value })}
+              name="nouveau-mot-de-passe"
+              autoComplete="new-password"
             />
           </Champ>
           <Champ libelle="Nom complet *">

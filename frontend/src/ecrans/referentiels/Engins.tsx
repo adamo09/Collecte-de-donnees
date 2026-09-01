@@ -17,6 +17,7 @@ import {
   Champ,
   Chargement,
   Encart,
+  Manques,
   Pastille,
   Vide,
 } from '@/composants/Communs';
@@ -173,8 +174,9 @@ export default function EcranEngins() {
     return compte;
   }, [engins.data]);
 
-  const valide =
-    formulaire.numero_parc.trim().length > 0 && formulaire.site_id !== '';
+  const manques: string[] = [];
+  if (formulaire.numero_parc.trim().length === 0) manques.push('numéro de parc');
+  if (formulaire.site_id === '') manques.push('site');
 
   return (
     <>
@@ -332,6 +334,7 @@ export default function EcranEngins() {
         }
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton
               variante="secondaire"
               onClick={() => {
@@ -347,7 +350,7 @@ export default function EcranEngins() {
                   ? modification.mutate({ id: enEdition.id, corps: corpsModification() })
                   : creation.mutate(corpsDepuisFormulaire())
               }
-              disabled={!valide || creation.isPending || modification.isPending}
+              disabled={manques.length > 0 || creation.isPending || modification.isPending}
             >
               {creation.isPending || modification.isPending
                 ? 'Enregistrement…'

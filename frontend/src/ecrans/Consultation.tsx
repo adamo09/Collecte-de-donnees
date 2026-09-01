@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, StatutPastille, Vide, dateCourte,
+  Bouton, Carte, Champ, Chargement, Encart, Manques, manqueLongueur, StatutPastille, Vide, dateCourte,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import { useEcriture } from '@/utils/mutations';
@@ -229,8 +229,12 @@ export default function EcranConsultation() {
   }, [engins.data, module]);
 
   const champChoisi = module.corrigeables.find((c) => c.champ === champCorrige);
-  const correctionValide =
-    selection !== null && champCorrige !== '' && motif.trim().length >= 3;
+  // Le motif alimente le journal d'audit : trois caractères sont le
+  // minimum en deçà duquel la trace ne renseigne plus personne.
+  const manquesCorrection: string[] = [];
+  if (champCorrige === '') manquesCorrection.push('champ à corriger');
+  if (motif.trim().length < 3) manquesCorrection.push(manqueLongueur('motif', motif.trim().length, 3));
+  const correctionValide = selection !== null && manquesCorrection.length === 0;
 
   const afficher = (valeur: unknown, type?: 'date' | 'nombre') => {
     if (valeur === null || valeur === undefined || valeur === '') return '—';
@@ -360,6 +364,7 @@ export default function EcranConsultation() {
         largeur={560}
         actions={
           <>
+            <Manques manques={manquesCorrection} />
             <Bouton variante="secondaire" onClick={() => setSelection(null)}>Annuler</Bouton>
             <Bouton
               disabled={!correctionValide || correction.isPending}

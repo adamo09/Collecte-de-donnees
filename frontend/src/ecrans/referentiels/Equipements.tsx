@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
-import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { Bouton, Carte, Champ, Chargement, Encart, Manques, Pastille, Vide } from '@/composants/Communs';
 import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
@@ -127,7 +127,9 @@ export default function EcranEquipements() {
   });
 
   const retour = creation.retour ?? modification.retour;
-  const valide = formulaire.designation.trim() !== '' && formulaire.site_id !== '';
+  const manques: string[] = [];
+  if (formulaire.designation.trim() === '') manques.push('désignation');
+  if (formulaire.site_id === '') manques.push('site');
 
   return (
     <>
@@ -237,6 +239,7 @@ export default function EcranEquipements() {
         erreur={retour?.ton === 'erreur' ? retour.texte : null}
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton
               variante="secondaire"
               onClick={() => {
@@ -247,7 +250,7 @@ export default function EcranEquipements() {
               Annuler
             </Bouton>
             <Bouton
-              disabled={!valide || creation.isPending || modification.isPending}
+              disabled={manques.length > 0 || creation.isPending || modification.isPending}
               onClick={() =>
                 enEdition
                   ? modification.mutate({ id: enEdition.id, corps: corps() })

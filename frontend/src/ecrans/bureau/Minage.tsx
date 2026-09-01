@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, StatutPastille, Vide, jourCourt,
+  Bouton, Carte, Champ, Chargement, Encart, Manques, StatutPastille, Vide, jourCourt,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import { nombreOuNull, texteOuNull, useEcriture } from '@/utils/mutations';
@@ -81,7 +81,9 @@ export default function EcranMinage() {
     },
   });
 
-  const valide = formulaire.site_id !== '' && formulaire.date_prestation !== '';
+  const manques: string[] = [];
+  if (formulaire.site_id === '') manques.push('site');
+  if (formulaire.date_prestation === '') manques.push('date de prestation');
 
   return (
     <>
@@ -175,9 +177,10 @@ export default function EcranMinage() {
         largeur={620}
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
+              disabled={manques.length > 0 || creation.isPending}
               onClick={() =>
                 creation.mutate({
                   id: nouvelIdentifiant(),

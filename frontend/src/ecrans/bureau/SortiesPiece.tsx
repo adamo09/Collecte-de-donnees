@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, StatutPastille, Vide, jourCourt,
+  Bouton, Carte, Champ, Chargement, Encart, Manques, StatutPastille, Vide, jourCourt,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import { nombreOuNull, texteOuNull, useEcriture } from '@/utils/mutations';
@@ -91,10 +91,10 @@ export default function EcranSortiesPiece() {
 
   const cibleChoisie =
     formulaire.cible === 'engin' ? formulaire.engin_id : formulaire.equipement_id;
-  const valide =
-    cibleChoisie !== '' &&
-    formulaire.reference_piece.trim() !== '' &&
-    (nombreOuNull(formulaire.quantite) ?? 0) > 0;
+  const manques: string[] = [];
+  if (cibleChoisie === '') manques.push(formulaire.cible === 'engin' ? 'engin' : 'équipement');
+  if (formulaire.reference_piece.trim() === '') manques.push('référence de la pièce');
+  if ((nombreOuNull(formulaire.quantite) ?? 0) <= 0) manques.push('quantité (supérieure à zéro)');
 
   return (
     <>
@@ -175,9 +175,10 @@ export default function EcranSortiesPiece() {
         largeur={620}
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton variante="secondaire" onClick={() => setModaleOuverte(false)}>Annuler</Bouton>
             <Bouton
-              disabled={!valide || creation.isPending}
+              disabled={manques.length > 0 || creation.isPending}
               onClick={() =>
                 creation.mutate({
                   id: nouvelIdentifiant(),

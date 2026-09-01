@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
-import { Bouton, Carte, Champ, Chargement, Encart, Pastille, Vide } from '@/composants/Communs';
+import { Bouton, Carte, Champ, Chargement, Encart, Manques, Pastille, Vide } from '@/composants/Communs';
 import { ActionsReferentiel } from '@/composants/ActionsReferentiel';
 import { ImportCsv } from '@/composants/ImportCsv';
 import { Modale } from '@/composants/Modale';
@@ -98,7 +98,9 @@ export default function EcranPersonnel() {
   };
 
   const retour = creation.retour ?? modification.retour;
-  const valide = formulaire.matricule.trim() !== '' && formulaire.nom_prenoms.trim() !== '';
+  const manques: string[] = [];
+  if (formulaire.matricule.trim() === '') manques.push('matricule');
+  if (formulaire.nom_prenoms.trim() === '') manques.push('nom et prénoms');
 
   return (
     <>
@@ -225,6 +227,7 @@ export default function EcranPersonnel() {
         erreur={retour?.ton === 'erreur' ? retour.texte : null}
         actions={
           <>
+            <Manques manques={manques} />
             <Bouton
               variante="secondaire"
               onClick={() => {
@@ -235,7 +238,7 @@ export default function EcranPersonnel() {
               Annuler
             </Bouton>
             <Bouton
-              disabled={!valide || creation.isPending || modification.isPending}
+              disabled={manques.length > 0 || creation.isPending || modification.isPending}
               onClick={() => {
                 const corps = {
                   nom_prenoms: formulaire.nom_prenoms.trim(),

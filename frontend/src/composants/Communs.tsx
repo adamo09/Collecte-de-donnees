@@ -96,6 +96,32 @@ export function Vide({ texte }: { texte: string }) {
   return <p className="etat-vide">{texte}</p>;
 }
 
+/** Ce qui manque encore pour que l'envoi soit possible.
+ *
+ *  Un bouton grisé sans explication est muet : l'utilisateur voit un
+ *  formulaire qu'il croit rempli et un bouton qui refuse, sans jamais
+ *  savoir lequel des champs le retient — le cas typique étant un mot de
+ *  passe pré-rempli par le navigateur, trop court de trois caractères.
+ *  La liste se recalcule à chaque frappe et s'efface dès que tout est là.
+ */
+/** Formule le manque d'un champ soumis à une longueur minimale.
+ *
+ *  Vide, le champ se nomme simplement ; entamé, il annonce son décompte —
+ *  c'est là seulement que le chiffre éclaire, en disant de combien on est
+ *  encore loin plutôt que de laisser croire à un champ non rempli. */
+export function manqueLongueur(libelle: string, longueur: number, minimum: number): string {
+  return longueur === 0 ? libelle : `${libelle} (${longueur} sur ${minimum} caractères)`;
+}
+
+export function Manques({ manques }: { manques: string[] }) {
+  if (manques.length === 0) return null;
+  return (
+    <p className="manques" role="status">
+      <span className="manques__tete">À compléter :</span> {manques.join(' · ')}
+    </p>
+  );
+}
+
 export function Champ({
   libelle,
   aide,

@@ -48,7 +48,10 @@ services:
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   web:
-    image: node:22-alpine
+    # Image Debian et non Alpine : même famille de bibliothèque C que les
+    # postes de développement habituels. Vite dépend d'esbuild et de
+    # rollup, qui embarquent des binaires natifs propres à la plateforme.
+    image: node:22-slim
     container_name: caderac_web
     restart: unless-stopped
     depends_on:
@@ -57,14 +60,21 @@ services:
     environment:
       # Le front appelle l'API en relatif (/api/v1) ; c'est le serveur de
       # développement Vite qui achemine. Aucune URL n'est compilée dans le
-      # bundle, si bien que la même image sert en local et en production.
+      # bundle, si bien que le même build sert en local et en production.
       URL_API: http://api:8000
     ports:
       - "5173:5173"
     volumes:
       - ./frontend:/app
+      # node_modules vit dans un volume dédié, jamais sur le disque de
+      # l'hôte : sans cela, les binaires natifs installés par le conteneur
+      # écraseraient ceux du poste, et « npm run dev » cesserait de
+      # fonctionner en dehors de Docker. Le volume évite aussi de
+      # réinstaller à chaque démarrage.
+      - modules_web:/app/node_modules
       - ./backend/openapi.json:/backend/openapi.json:ro
     command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
 
 volumes:
   donnees_postgres:
+  modules_web:

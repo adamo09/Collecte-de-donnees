@@ -14,6 +14,25 @@ L'API est appelée en **relatif** (`/api/v1`) : en développement le proxy Vite
 achemine, en production le serveur statique fait de même. Aucune URL d'API
 n'est compilée dans le bundle, si bien que le même build sert partout.
 
+### Docker et `node_modules` ne partagent rien
+
+Sous `docker compose`, les dépendances du conteneur vivent dans un volume
+dédié, jamais dans le `frontend/node_modules` du poste. Ce n'est pas une
+optimisation : Vite dépend d'esbuild et de rollup, qui embarquent des
+**binaires natifs propres à la plateforme**. Si le conteneur installait ses
+dépendances sur le disque de l'hôte, `npm run dev` cesserait de fonctionner
+en dehors de Docker — et réciproquement.
+
+Les deux modes coexistent donc sans se gêner :
+
+```bash
+docker compose up -d          # front sur :5173, dépendances dans le volume
+npm install && npm run dev    # front sur :5173, dépendances du poste
+```
+
+En cas de doute après un changement de mode :
+`docker compose down -v` réinitialise le volume.
+
 ```bash
 npm run verifier-types   # tsc --noEmit
 npm run build            # dist/ statique, ~82 Ko compressés

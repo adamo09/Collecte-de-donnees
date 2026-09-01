@@ -55,6 +55,7 @@ export default function EcranExports() {
   });
 
   const definition = catalogue.data?.find((e) => e.nom === nom);
+  const filtresActifs = Boolean(site || du || au);
 
   /** Le téléchargement passe par fetch plutôt que par un lien : le jeton
    *  d'authentification voyage dans un en-tête, pas dans l'URL. */
@@ -159,7 +160,20 @@ export default function EcranExports() {
         ) : apercu.isError ? (
           <Encart ton="erreur">{(apercu.error as Error).message}</Encart>
         ) : apercu.data.lignes.length === 0 ? (
-          <Vide texte="Aucune donnée validée pour ce filtre." />
+          // Sans filtre, un résultat vide ne dit pas « votre filtre est trop
+          // étroit » : il dit qu'aucune donnée n'a encore été validée. Les
+          // deux situations appellent des gestes différents.
+          filtresActifs ? (
+            <Vide texte="Aucune donnée validée ne correspond à ce filtre. Élargir la période ou changer de site." />
+          ) : (
+            <Vide
+              texte={
+                "Aucune donnée validée pour cet export. Une donnée n'y figure " +
+                "qu'après être passée par le contrôle puis la validation : " +
+                "vérifier la file de validation."
+              }
+            />
+          )
         ) : (
           <div className="tableau-enveloppe">
             <table className="tableau">

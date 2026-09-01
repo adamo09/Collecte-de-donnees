@@ -257,7 +257,16 @@ export default function EcranFileValidation() {
         ) : file.isError ? (
           <Encart ton="erreur">{(file.error as Error).message}</Encart>
         ) : lignes.length === 0 ? (
-          <Vide texte="Rien à contrôler. Toutes les données du périmètre sont traitées." />
+          // « Tout est traité » serait un mensonge sur une base encore vide :
+          // les deux causes possibles sont énoncées.
+          <Vide
+            texte={
+              siteId || statut || table
+                ? 'Rien à contrôler pour ce filtre.'
+                : "Rien à contrôler : soit tout est traité, soit aucune donnée " +
+                  "n'a encore été synchronisée depuis les terminaux."
+            }
+          />
         ) : (
           <div className="tableau-enveloppe">
             <table className="tableau">

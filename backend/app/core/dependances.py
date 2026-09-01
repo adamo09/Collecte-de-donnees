@@ -37,9 +37,15 @@ def utilisateur_courant(
     if utilisateur is None:
         raise echec
     if not utilisateur.actif:
+        # 401 et non 403 : ce n'est pas un droit qui manque sur cet appel,
+        # c'est la session entière qui n'a plus lieu d'être. Le client
+        # tente alors de renouveler ses jetons, échoue, et ramène
+        # l'utilisateur à l'écran de connexion — au lieu de le laisser
+        # devant un écran mort qu'aucun clic ne débloque.
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Ce compte est désactivé.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     return utilisateur
 

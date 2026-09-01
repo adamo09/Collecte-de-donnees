@@ -155,3 +155,78 @@ def test_changement_de_mot_de_passe(client, entetes, comptes):
         ).status_code
         == 200
     )
+
+
+# ---------------------------------------------------------------------
+# Enfermement dehors : l'administration ne doit pas pouvoir se supprimer
+# les moyens d'administrer. Toute action exige un compte actif ET le rôle
+# admin — la manœuvre qui les retire est donc sans retour par l'API.
+# ---------------------------------------------------------------------
+
+
+def test_un_administrateur_ne_se_desactive_pas_lui_meme(client, entetes, comptes):
+    admin = comptes["administrateur"]
+    reponse = client.patch(
+        f"/api/v1/auth/utilisateurs/{admin.id}",
+        json={"actif": False},
+        headers=entetes("administrateur"),
+    )
+    assert reponse.status_code == 409
+    assert "son propre compte" in reponse.json()["detail"]
+
+
+def test_un_administrateur_ne_retire_pas_son_propre_role(client, entetes, comptes):
+    admin = comptes["administrateur"]
+    reponse = client.patch(
+        f"/api/v1/auth/utilisateurs/{admin.id}",
+        json={"role": "controleur"},
+        headers=entetes("administrateur"),
+    )
+    assert reponse.status_code == 409
+
+
+def test_un_autre_administrateur_peut_desactiver_un_administrateur(client, entetes, comptes):
+    """Refuser la seule manœuvre réflexive suffit : celui qui désactive
+    est nécessairement actif et administrateur, donc il reste toujours
+    quelqu'un pour rouvrir."""
+    second = client.post(
+        "/api/v1/auth/utilisateurs",
+        json={
+            "login": "admin2",
+            "mot_de_passe": "motdepasse123",
+            "nom_complet": "Second administrateur",
+            "role": "admin",
+        },
+        headers=entetes("administrateur"),
+    )
+    assert second.status_code == 201
+
+    reponse = client.patch(
+        f"/api/v1/auth/utilisateurs/{second.json()['id']}",
+        json={"actif": False},
+        headers=entetes("administrateur"),
+    )
+    assert reponse.status_code == 200
+    assert reponse.json()["actif"] is False
+
+
+def test_desactiver_un_compte_non_admin_reste_possible(client, entetes, comptes):
+    reponse = client.patch(
+        f"/api/v1/auth/utilisateurs/{comptes['agent'].id}",
+        json={"actif": False},
+        headers=entetes("administrateur"),
+    )
+    assert reponse.status_code == 200
+    assert reponse.json()["actif"] is False
+
+
+def test_une_session_dont_le_compte_est_desactive_vaut_401(client, entetes, comptes, session):
+    """401 et non 403 : le client renouvelle, échoue, et revient à l'écran
+    de connexion — au lieu de rester devant un écran mort."""
+    jeton = entetes("agent")
+    comptes["agent"].actif = False
+    session.commit()
+
+    reponse = client.get("/api/v1/referentiels/engins", headers=jeton)
+    assert reponse.status_code == 401
+    assert reponse.json()["detail"] == "Ce compte est désactivé."

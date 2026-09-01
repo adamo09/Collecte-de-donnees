@@ -73,7 +73,18 @@ const authentification: Middleware = {
 
     if (!renouvele) {
       jetons.effacer();
-      window.dispatchEvent(new Event(EVENEMENT_SESSION_PERDUE));
+      // Dire pourquoi la session s'arrête : « ce compte est désactivé »
+      // et « session expirée » n'appellent pas la même réaction. Sans
+      // motif, l'utilisateur se retrouve devant l'écran de connexion
+      // sans comprendre ce qui vient de se passer.
+      let motif = 'Session expirée. Se reconnecter.';
+      try {
+        const corps = (await response.clone().json()) as { detail?: unknown };
+        if (typeof corps.detail === 'string') motif = corps.detail;
+      } catch {
+        // Corps illisible : le message générique fait l'affaire.
+      }
+      window.dispatchEvent(new CustomEvent(EVENEMENT_SESSION_PERDUE, { detail: motif }));
       return response;
     }
 

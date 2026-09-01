@@ -21,6 +21,9 @@ interface ValeurSession {
   utilisateur: Utilisateur | null;
   seConnecter: (login: string, motDePasse: string) => Promise<void>;
   seDeconnecter: () => void;
+  /** Pourquoi la session s'est arrêtée d'elle-même — compte désactivé,
+   *  jetons expirés. Affiché sur l'écran de connexion. */
+  motifDeconnexion: string | null;
   /** Le contrôleur consolide les quatre sites ; les autres rôles sont
    *  cantonnés au leur. */
   voitTousLesSites: boolean;
@@ -36,6 +39,7 @@ const Contexte = createContext<ValeurSession | null>(null);
 export function FournisseurSession({ children }: { children: ReactNode }) {
   const [pret, setPret] = useState(false);
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
+  const [motifDeconnexion, setMotifDeconnexion] = useState<string | null>(null);
 
   const charger = useCallback(async () => {
     if (!jetons.acces()) {
@@ -53,7 +57,11 @@ export function FournisseurSession({ children }: { children: ReactNode }) {
   // Le client HTTP signale une session définitivement perdue : on revient à
   // l'écran de connexion au lieu de laisser des écrans vides.
   useEffect(() => {
-    const surPerte = () => setUtilisateur(null);
+    const surPerte = (evenement: Event) => {
+      setUtilisateur(null);
+      const motif = (evenement as CustomEvent<string>).detail;
+      setMotifDeconnexion(typeof motif === 'string' ? motif : null);
+    };
     window.addEventListener(EVENEMENT_SESSION_PERDUE, surPerte);
     return () => window.removeEventListener(EVENEMENT_SESSION_PERDUE, surPerte);
   }, []);
@@ -67,6 +75,7 @@ export function FournisseurSession({ children }: { children: ReactNode }) {
         throw new Error(messageErreur(error, 'Connexion refusée.'));
       }
       jetons.enregistrer(data.access_token, data.refresh_token);
+      setMotifDeconnexion(null);
       await charger();
     },
     [charger],
@@ -75,6 +84,8 @@ export function FournisseurSession({ children }: { children: ReactNode }) {
   const seDeconnecter = useCallback(() => {
     jetons.effacer();
     setUtilisateur(null);
+    // Départ volontaire : rien à expliquer sur l'écran de connexion.
+    setMotifDeconnexion(null);
   }, []);
 
   const valeur = useMemo<ValeurSession>(() => {
@@ -88,8 +99,9 @@ export function FournisseurSession({ children }: { children: ReactNode }) {
       peutValider: role === 'superviseur' || role === 'controleur' || role === 'admin',
       peutExporter: role === 'superviseur' || role === 'controleur' || role === 'admin',
       estAdmin: role === 'admin',
+      motifDeconnexion,
     };
-  }, [pret, utilisateur, seConnecter, seDeconnecter]);
+  }, [pret, utilisateur, seConnecter, seDeconnecter, motifDeconnexion]);
 
   return <Contexte.Provider value={valeur}>{children}</Contexte.Provider>;
 }

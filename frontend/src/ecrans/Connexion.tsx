@@ -7,7 +7,7 @@ import { useSession } from '@/contextes/Session';
 import './Connexion.css';
 
 export default function EcranConnexion() {
-  const { seConnecter } = useSession();
+  const { seConnecter, motifDeconnexion } = useSession();
   const [login, setLogin] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
@@ -33,7 +33,11 @@ export default function EcranConnexion() {
         <h1 className="connexion__titre">CADERAC</h1>
         <p className="connexion__sous-titre">Contrôle et validation des données terrain</p>
 
-        {erreur && <Encart ton="erreur">{erreur}</Encart>}
+        {erreur ? (
+          <Encart ton="erreur">{erreur}</Encart>
+        ) : (
+          motifDeconnexion && <Encart ton="alerte">{motifDeconnexion}</Encart>
+        )}
 
         <Champ libelle="Identifiant">
           <input

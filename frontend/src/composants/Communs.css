@@ -152,3 +152,7 @@
   text-align: left;
 }
 .manques__tete { font-weight: 700; }
+
+/* Mention prenant la place d'une action impossible — une case vide
+   laisserait croire à un défaut d'affichage. */
+.mention-discrete { color: var(--texte-faible); font-size: 13px; font-style: italic; }

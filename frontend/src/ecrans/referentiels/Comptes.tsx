@@ -15,6 +15,7 @@ import {
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
 import { texteOuNull, useEcriture } from '@/utils/mutations';
+import { useSession } from '@/contextes/Session';
 import { useSites } from '@/utils/requetes';
 
 type Role = components['schemas']['RoleUtilisateur'];
@@ -36,6 +37,7 @@ const VIDE = {
 };
 
 export default function EcranComptes() {
+  const { utilisateur: moi } = useSession();
   const sites = useSites();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
@@ -143,7 +145,13 @@ export default function EcranComptes() {
                 </tr>
               </thead>
               <tbody>
-                {comptes.data!.map((compte) => (
+                {comptes.data!.map((compte) => {
+                  // Se désactiver soi-même ferme la porte de l'intérieur :
+                  // toute action exige un compte actif, y compris celle qui
+                  // le réactiverait. Le bouton est donc retiré, pas seulement
+                  // refusé par l'API.
+                  const cestMoi = compte.id === moi?.id;
+                  return (
                   <tr key={compte.id}>
                     <td className="mono">{compte.login}</td>
                     <td>{compte.nom_complet}</td>
@@ -160,18 +168,23 @@ export default function EcranComptes() {
                       </Pastille>
                     </td>
                     <td>
-                      <Bouton
-                        variante="secondaire"
-                        disabled={basculerActif.isPending}
-                        onClick={() =>
-                          basculerActif.mutate({ id: compte.id, actif: !compte.actif })
-                        }
-                      >
-                        {compte.actif ? 'Désactiver' : 'Réactiver'}
-                      </Bouton>
+                      {cestMoi && compte.actif ? (
+                        <span className="mention-discrete">Votre compte</span>
+                      ) : (
+                        <Bouton
+                          variante="secondaire"
+                          disabled={basculerActif.isPending}
+                          onClick={() =>
+                            basculerActif.mutate({ id: compte.id, actif: !compte.actif })
+                          }
+                        >
+                          {compte.actif ? 'Désactiver' : 'Réactiver'}
+                        </Bouton>
+                      )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

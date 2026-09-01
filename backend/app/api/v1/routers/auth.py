@@ -16,6 +16,7 @@ from app.core.securite import (
     hacher_mot_de_passe,
     verifier_mot_de_passe,
 )
+from app.models.enums import RoleUtilisateur
 from app.models.referentiels import Utilisateur
 from app.schemas.auth import (
     ChangementMotDePasse,
@@ -186,7 +187,7 @@ def creer_utilisateur(
 )
 def modifier_utilisateur(
     session: SessionBD,
-    _: ExigeAdmin,
+    courant: ExigeAdmin,
     utilisateur_id: str,
     demande: UtilisateurModification,
 ) -> Utilisateur:
@@ -195,6 +196,37 @@ def modifier_utilisateur(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Compte introuvable."
         )
+
+    # Toute action exige un compte actif ET le rôle admin : un
+    # administrateur qui se désactive ou se déclasse lui-même n'a plus
+    # aucun moyen de revenir en arrière par l'application — pas même
+    # celui de se réactiver. Le clic est trop facile, aligné avec le
+    # « Désactiver » de toutes les autres lignes, pour rester sans
+    # garde-fou.
+    #
+    # Refuser la seule manœuvre réflexive suffit à garantir qu'il reste
+    # toujours un administrateur actif : l'appelant est nécessairement
+    # actif et administrateur, donc désactiver quelqu'un d'autre le
+    # laisse, lui, pour rouvrir. Un contrôle du « dernier administrateur »
+    # ne se déclencherait jamais.
+    if str(utilisateur.id) == str(courant.id):
+        if demande.actif is False:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "Un administrateur ne peut pas désactiver son propre compte : "
+                    "il se fermerait la porte. Un autre administrateur le peut."
+                ),
+            )
+        if demande.role is not None and demande.role is not RoleUtilisateur.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "Un administrateur ne peut pas retirer son propre rôle : "
+                    "il perdrait l'accès aux référentiels et aux comptes."
+                ),
+            )
+
     for champ, valeur in demande.model_dump(exclude_unset=True).items():
         setattr(utilisateur, champ, valeur)
     session.commit()

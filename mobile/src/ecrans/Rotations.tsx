@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   tuilePressee: { backgroundColor: couleurs.primaireClair, transform: [{ scale: 0.97 }] },
   tuileParc: { fontSize: 30, fontWeight: '800', color: '#FFFFFF', letterSpacing: 1 },
-  tuileCapacite: { fontSize: 13, color: '#D7DEEA', marginTop: espacement.xs },
+  tuileCapacite: { fontSize: 13, color: couleurs.surMarine, marginTop: espacement.xs },
   compteur: {
     position: 'absolute',
     top: espacement.s,
@@ -229,7 +229,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
-  compteurTexte: { fontSize: 15, fontWeight: '800', color: '#1A1A1A' },
+  // Marine sur bleu clair : 6,8:1, lisible en plein soleil.
+  compteurTexte: { fontSize: 15, fontWeight: '800', color: couleurs.accentSurClair },
   info: { fontSize: 16, color: couleurs.texteFaible, textAlign: 'center', lineHeight: 24 },
   note: {
     marginTop: espacement.l,

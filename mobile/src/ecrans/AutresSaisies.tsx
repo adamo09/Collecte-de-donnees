@@ -108,12 +108,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: couleurs.bordure,
     borderLeftWidth: 3,
-    borderLeftColor: couleurs.accent,
+    // Sur fond blanc, le bleu clair de la marque tomberait à 1,9:1 :
+    // c'est le marine qui porte le repère.
+    borderLeftColor: couleurs.primaire,
     padding: espacement.m,
     marginBottom: espacement.m,
     justifyContent: 'center',
   },
-  tuilePressee: { backgroundColor: '#E8EDF5' },
+  tuilePressee: { backgroundColor: couleurs.presse },
   tuileTitre: { fontSize: 19, fontWeight: '800', color: couleurs.primaire },
   tuileDescription: {
     fontSize: 13.5,

@@ -5,9 +5,20 @@
  */
 
 export const couleurs = {
-  primaire: '#1F3864',
-  primaireClair: '#2E5090',
-  accent: '#E8A33D',
+  // Couleurs relevées sur le logo CADERAC. Le bleu marine de la marque
+  // contraste mieux avec le blanc que le bleu précédent (12,7:1 contre
+  // 11,6:1) : l'alignement sur la charte a aussi amélioré la lisibilité
+  // en plein soleil.
+  primaire: '#003559',
+  primaireClair: '#0A4C77',
+  // Le bleu clair de la marque ne s'emploie que SUR du marine ou sur la
+  // vue caméra : sur blanc il tombe à 1,9:1, illisible. Voir accentSurClair.
+  accent: '#8AC6E6',
+  accentSurClair: '#003559',
+  /** Fond d'un élément pressé : teinte pâle du bleu de la marque. */
+  presse: '#E4F0F7',
+  /** Texte secondaire posé sur une surface marine — 8,9:1. */
+  surMarine: '#C3DCEB',
   fond: '#F4F6F9',
   surface: '#FFFFFF',
   texte: '#1A1A1A',

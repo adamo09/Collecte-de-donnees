@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     borderColor: couleurs.bordure,
     marginBottom: espacement.s,
   },
-  lignePressee: { backgroundColor: '#E8EDF5' },
+  lignePressee: { backgroundColor: couleurs.presse },
   lignParc: { fontSize: 22, fontWeight: '800', color: couleurs.primaire },
   ligneDetail: { fontSize: 14, color: couleurs.texteFaible, marginTop: 2 },
   info: {

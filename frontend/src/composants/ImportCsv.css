@@ -23,7 +23,7 @@
   padding: 1px 5px;
   color: var(--texte);
 }
-.import__requis { color: var(--ocre-sombre); font-weight: 600; font-size: 12px; }
+.import__requis { color: var(--ambre); font-weight: 600; font-size: 12px; }
 .import__aide { color: var(--texte-faible); font-size: 12px; font-style: italic; }
 .import__apercu .tableau,
 .import__echecs .tableau { font-size: 12.5px; }

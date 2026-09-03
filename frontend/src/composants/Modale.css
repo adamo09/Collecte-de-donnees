@@ -11,7 +11,7 @@
 .modale__panneau {
   background: var(--surface);
   border-radius: var(--rayon);
-  border-top: 3px solid var(--ocre);
+  border-top: 3px solid var(--bleu);
   box-shadow: 0 12px 40px rgba(19, 28, 46, .28);
   display: flex;
   flex-direction: column;
@@ -82,8 +82,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--ocre);
-  color: #131C2E;
+  background: var(--bleu);
+  color: #FFFFFF;
   font-size: 11px;
   font-weight: 800;
 }

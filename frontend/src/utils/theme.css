@@ -1,23 +1,32 @@
 /* =====================================================================
-   Palette reprise de mobile/src/utils/theme.ts : le back-office et
-   l'application terrain parlent la même langue visuelle.
-   Neutres biaisés vers le bleu de structure — aucun gris pur.
+   Palette CADERAC, relevée sur le logo : marine #003559, ciel #8AC6E6.
+   Le back-office et l'application terrain parlent la même langue —
+   voir mobile/src/utils/theme.ts.
+
+   Le ciel de la marque ne s'emploie que SUR du marine : posé sur blanc
+   il tombe à 1,9:1, illisible. Tout ce qui doit ressortir sur une
+   surface claire prend le marine.
    ===================================================================== */
 :root {
-  --bleu:          #1F3864;
-  --bleu-clair:    #2E5090;
-  --bleu-pale:     #E8EDF6;
-  --ocre:          #E8A33D;
-  --ocre-sombre:   #A96F14;
+  --bleu:          #003559;   /* marine de la marque */
+  --bleu-clair:    #0A4C77;   /* survol, état pressé */
+  --bleu-pale:     #E4F0F7;
+  --ciel:          #8AC6E6;   /* ciel de la marque — sur marine uniquement */
+  --ciel-doux:     #BBDCEF;
 
-  --fond:          #EDF0F5;
+  /* Ambre : couleur d'alerte, pas de marque. Elle signale, elle ne
+     représente pas CADERAC. */
+  --ambre:         #A96F14;
+  --ambre-pale:    #FCF1DC;
+
+  --fond:          #EEF2F6;
   --surface:       #FFFFFF;
-  --surface-2:     #F5F8FC;
-  --bordure:       #D2DAE7;
-  --bordure-forte: #B4C0D4;
-  --texte:         #131C2E;
-  --texte-doux:    #4E5A73;
-  --texte-faible:  #78849B;
+  --surface-2:     #F5F8FB;
+  --bordure:       #DDE4EC;
+  --bordure-forte: #B7C3D1;
+  --texte:         #0F1B27;
+  --texte-doux:    #46566A;
+  --texte-faible:  #748394;
 
   --vert:          #1B6B2F;
   --vert-pale:     #E3F3E7;
@@ -25,8 +34,11 @@
   --rouille-pale:  #FBEBE1;
   --violet:        #55398C;
 
-  --ombre: 0 1px 2px rgba(19, 28, 46, .05), 0 3px 12px rgba(19, 28, 46, .05);
-  --rayon: 6px;
+  /* Ombres en deux plans : un liseré net, puis une diffusion douce. */
+  --ombre:      0 1px 1px rgba(0, 53, 89, .04), 0 2px 6px rgba(0, 53, 89, .06);
+  --ombre-forte: 0 2px 4px rgba(0, 53, 89, .06), 0 10px 28px rgba(0, 53, 89, .10);
+  --rayon:      9px;
+  --rayon-s:    5px;
 
   --titre: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
   --corps: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -47,7 +59,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-:focus-visible { outline: 2px solid var(--ocre); outline-offset: 2px; border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--bleu-clair); outline-offset: 2px; border-radius: 3px; }
 
 h1, h2, h3 { font-family: var(--titre); margin: 0; letter-spacing: -.005em; }
 

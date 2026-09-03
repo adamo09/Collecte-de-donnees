@@ -28,6 +28,7 @@ import EcranEquipements from '@/ecrans/referentiels/Equipements';
 import EcranNomenclatures from '@/ecrans/referentiels/Nomenclatures';
 import EcranPersonnel from '@/ecrans/referentiels/Personnel';
 import EcranProduits from '@/ecrans/referentiels/Produits';
+import logoCaderac from '@/assets/logo-caderac.png';
 import './App.css';
 
 /** Sections de navigation. Le regroupement suit les métiers, non les
@@ -85,7 +86,10 @@ export default function App() {
     <div className="cadre">
       <aside className="cote">
         <div className="cote__marque">
-          <span className="cote__nom">CADERAC</span>
+          {/* Le logo est marine sur fond transparent : posé tel quel sur la
+              barre latérale marine, il disparaîtrait. Une plaque claire le
+              rétablit — c'est le placement prévu par la charte. */}
+          <img className="cote__logo" src={logoCaderac} alt="CADERAC Carrières" />
           <span className="cote__sous">Contrôle de gestion</span>
         </div>
 

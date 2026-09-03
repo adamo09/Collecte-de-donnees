@@ -31,7 +31,7 @@
 .pastille--neutre { background: var(--surface-2); color: var(--texte-doux); }
 .pastille--info   { background: var(--bleu-pale);  color: var(--bleu); }
 .pastille--succes { background: var(--vert-pale);  color: var(--vert); }
-.pastille--alerte { background: #FCF1DC;           color: var(--ocre-sombre); }
+.pastille--alerte { background: var(--ambre-pale);  color: var(--ambre); }
 .pastille--erreur { background: var(--rouille-pale); color: var(--rouille); }
 
 /* --- Encarts ------------------------------------------------------- */
@@ -45,7 +45,7 @@
 .encart--neutre { background: var(--surface-2);   border-color: var(--bordure-forte); color: var(--texte-doux); }
 .encart--info   { background: var(--bleu-pale);   border-color: var(--bleu);    color: var(--bleu); }
 .encart--succes { background: var(--vert-pale);   border-color: var(--vert);    color: var(--vert); }
-.encart--alerte { background: #FCF1DC;            border-color: var(--ocre-sombre); color: var(--ocre-sombre); }
+.encart--alerte { background: var(--ambre-pale);  border-color: var(--ambre); color: var(--ambre); }
 .encart--erreur { background: var(--rouille-pale); border-color: var(--rouille); color: var(--rouille); }
 
 /* --- Cartes -------------------------------------------------------- */

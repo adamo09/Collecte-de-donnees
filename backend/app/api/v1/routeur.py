@@ -11,6 +11,7 @@ from app.api.v1.routers import (
     marinage,
     minage,
     parc,
+    pilotage,
     referentiels,
     synchronisation,
     validation,
@@ -31,3 +32,4 @@ routeur_v1.include_router(expedition.routeur)
 routeur_v1.include_router(parc.routeur)
 routeur_v1.include_router(validation.routeur)
 routeur_v1.include_router(exports.routeur)
+routeur_v1.include_router(pilotage.routeur)

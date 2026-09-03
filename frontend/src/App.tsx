@@ -16,6 +16,7 @@ import EcranCompletude from '@/ecrans/Completude';
 import EcranConnexion from '@/ecrans/Connexion';
 import EcranExports from '@/ecrans/Exports';
 import EcranFileValidation from '@/ecrans/FileValidation';
+import EcranIndicateurs from '@/ecrans/Indicateurs';
 import EcranTrousNonClotures from '@/ecrans/TrousNonClotures';
 import EcranConsultation from '@/ecrans/Consultation';
 import EcranCharges from '@/ecrans/bureau/Charges';
@@ -38,6 +39,7 @@ const SECTIONS = [
   {
     titre: 'Contrôle',
     liens: [
+      { vers: '/indicateurs', libelle: 'Indicateurs' },
       { vers: '/validation', libelle: 'File de validation' },
       { vers: '/consultation', libelle: 'Consulter les données' },
       { vers: '/trous-ouverts', libelle: 'Trous non clôturés' },
@@ -125,6 +127,7 @@ export default function App() {
 
       <main className="principal">
         <Routes>
+          <Route path="/indicateurs" element={<EcranIndicateurs />} />
           <Route path="/validation" element={<EcranFileValidation />} />
           <Route path="/trous-ouverts" element={<EcranTrousNonClotures />} />
           <Route path="/completude" element={<EcranCompletude />} />

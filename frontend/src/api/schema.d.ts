@@ -1149,6 +1149,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pilotage/indicateurs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Indicateurs de la période
+         * @description Production, foration, disponibilité des engins et qualité de la collecte.
+         *
+         *     Sans période, les trente derniers jours. La borne haute est incluse.
+         */
+        get: operations["pilotage_lire_indicateurs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sante": {
         parameters: {
             query?: never;
@@ -1364,6 +1386,21 @@ export interface components {
             /** Commentaire */
             commentaire?: string | null;
         };
+        /** CauseArret */
+        CauseArret: {
+            /** Code */
+            code: string;
+            /** Libelle */
+            libelle: string;
+            /** Categorie */
+            categorie: string;
+            /** Occurrences */
+            occurrences: number;
+            /** Occurrences Mesurees */
+            occurrences_mesurees: number;
+            /** Heures */
+            heures: number;
+        };
         /** CauseArretEntree */
         CauseArretEntree: {
             /** Code */
@@ -1542,6 +1579,15 @@ export interface components {
             reference_document?: string | null;
             /** Commentaire */
             commentaire?: string | null;
+        };
+        /** Collecte */
+        Collecte: {
+            /** En Attente */
+            en_attente: {
+                [key: string]: number;
+            };
+            /** Age Max Heures */
+            age_max_heures: number | null;
         };
         /**
          * DemandeChangementStatut
@@ -1725,6 +1771,21 @@ export interface components {
             qr_token?: string | null;
             /** Actif */
             actif: boolean;
+        };
+        /** Engins */
+        Engins: {
+            /** Heures Marche */
+            heures_marche: number;
+            /** Heures Arret */
+            heures_arret: number;
+            /** Taux Disponibilite Pct */
+            taux_disponibilite_pct: number | null;
+            /** Etats Non Clotures */
+            etats_non_clotures: number;
+            /** Carburant Litres */
+            carburant_litres: number;
+            /** Engins Declarants */
+            engins_declarants: number;
         };
         /** EquipementEntree */
         EquipementEntree: {
@@ -2038,10 +2099,35 @@ export interface components {
          * @enum {string}
          */
         FamilleEngin: "dumper" | "foreuse" | "chargeuse" | "pelle" | "bull" | "brh" | "camion" | "autre";
+        /** Foration */
+        Foration: {
+            /** Trous */
+            trous: number;
+            /** Metres Lineaires */
+            metres_lineaires: number;
+            /** Duree Moyenne Min */
+            duree_moyenne_min: number | null;
+            /** Utilisation Foreuse */
+            utilisation_foreuse: number;
+            /** Trous Non Clotures */
+            trous_non_clotures: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** Indicateurs */
+        Indicateurs: {
+            periode: components["schemas"]["Periode"];
+            production: components["schemas"]["Production"];
+            foration: components["schemas"]["Foration"];
+            engins: components["schemas"]["Engins"];
+            /** Causes Arret */
+            causes_arret: components["schemas"]["CauseArret"][];
+            /** Serie */
+            serie: components["schemas"]["PointSerie"][];
+            collecte: components["schemas"]["Collecte"];
         };
         /** Jetons */
         Jetons: {
@@ -2426,6 +2512,21 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** Periode */
+        Periode: {
+            /**
+             * Du
+             * Format: date
+             */
+            du: string;
+            /**
+             * Au
+             * Format: date
+             */
+            au: string;
+            /** Site */
+            site: string | null;
+        };
         /** PersonnelEntree */
         PersonnelEntree: {
             /** Matricule */
@@ -2571,6 +2672,22 @@ export interface components {
             /** Commentaire */
             commentaire?: string | null;
         };
+        /** PointSerie */
+        PointSerie: {
+            /**
+             * Jour
+             * Format: date
+             */
+            jour: string;
+            /** Rotations */
+            rotations: number;
+            /** Trous */
+            trous: number;
+            /** Tonnage Pese T */
+            tonnage_pese_t: number;
+            /** Tonnage Estime T */
+            tonnage_estime_t: number;
+        };
         /**
          * PosteTravail
          * @enum {string}
@@ -2675,6 +2792,21 @@ export interface components {
              * @default []
              */
             engins_mobilises: components["schemas"]["EnginMobiliseSortie"][];
+        };
+        /** Production */
+        Production: {
+            /** Rotations */
+            rotations: number;
+            /** Dumpers Actifs */
+            dumpers_actifs: number;
+            /** Tonnage Pese T */
+            tonnage_pese_t: number;
+            /** Tonnage Estime T */
+            tonnage_estime_t: number;
+            /** Part Estimee Pct */
+            part_estimee_pct: number | null;
+            /** Lignes Pesees */
+            lignes_pesees: number;
         };
         /** ProduitEntree */
         ProduitEntree: {
@@ -6007,6 +6139,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pilotage_lire_indicateurs: {
+        parameters: {
+            query?: {
+                site?: string | null;
+                du?: string | null;
+                au?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Indicateurs"];
+                };
             };
             /** @description Validation Error */
             422: {

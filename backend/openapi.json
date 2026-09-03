@@ -5308,6 +5308,95 @@
     }
    }
   },
+  "/api/v1/pilotage/indicateurs": {
+   "get": {
+    "tags": [
+     "Pilotage"
+    ],
+    "summary": "Indicateurs de la période",
+    "description": "Production, foration, disponibilité des engins et qualité de la collecte.\n\nSans période, les trente derniers jours. La borne haute est incluse.",
+    "operationId": "pilotage_lire_indicateurs",
+    "security": [
+     {
+      "OAuth2PasswordBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "site",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Site"
+      }
+     },
+     {
+      "name": "du",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Du"
+      }
+     },
+     {
+      "name": "au",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Au"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Indicateurs"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/sante": {
    "get": {
     "tags": [
@@ -5901,6 +5990,44 @@
     ],
     "title": "CampagnePesageSortie"
    },
+   "CauseArret": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "libelle": {
+      "type": "string",
+      "title": "Libelle"
+     },
+     "categorie": {
+      "type": "string",
+      "title": "Categorie"
+     },
+     "occurrences": {
+      "type": "integer",
+      "title": "Occurrences"
+     },
+     "occurrences_mesurees": {
+      "type": "integer",
+      "title": "Occurrences Mesurees"
+     },
+     "heures": {
+      "type": "number",
+      "title": "Heures"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "libelle",
+     "categorie",
+     "occurrences",
+     "occurrences_mesurees",
+     "heures"
+    ],
+    "title": "CauseArret"
+   },
    "CauseArretEntree": {
     "properties": {
      "code": {
@@ -6444,6 +6571,34 @@
      "devise"
     ],
     "title": "ChargeEnginSortie"
+   },
+   "Collecte": {
+    "properties": {
+     "en_attente": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "type": "object",
+      "title": "En Attente"
+     },
+     "age_max_heures": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Age Max Heures"
+     }
+    },
+    "type": "object",
+    "required": [
+     "en_attente",
+     "age_max_heures"
+    ],
+    "title": "Collecte"
    },
    "DemandeChangementStatut": {
     "properties": {
@@ -7160,6 +7315,51 @@
      "actif"
     ],
     "title": "EnginSortie"
+   },
+   "Engins": {
+    "properties": {
+     "heures_marche": {
+      "type": "number",
+      "title": "Heures Marche"
+     },
+     "heures_arret": {
+      "type": "number",
+      "title": "Heures Arret"
+     },
+     "taux_disponibilite_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taux Disponibilite Pct"
+     },
+     "etats_non_clotures": {
+      "type": "integer",
+      "title": "Etats Non Clotures"
+     },
+     "carburant_litres": {
+      "type": "number",
+      "title": "Carburant Litres"
+     },
+     "engins_declarants": {
+      "type": "integer",
+      "title": "Engins Declarants"
+     }
+    },
+    "type": "object",
+    "required": [
+     "heures_marche",
+     "heures_arret",
+     "taux_disponibilite_pct",
+     "etats_non_clotures",
+     "carburant_litres",
+     "engins_declarants"
+    ],
+    "title": "Engins"
    },
    "EquipementEntree": {
     "properties": {
@@ -8185,6 +8385,46 @@
     ],
     "title": "FamilleEngin"
    },
+   "Foration": {
+    "properties": {
+     "trous": {
+      "type": "integer",
+      "title": "Trous"
+     },
+     "metres_lineaires": {
+      "type": "number",
+      "title": "Metres Lineaires"
+     },
+     "duree_moyenne_min": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duree Moyenne Min"
+     },
+     "utilisation_foreuse": {
+      "type": "number",
+      "title": "Utilisation Foreuse"
+     },
+     "trous_non_clotures": {
+      "type": "integer",
+      "title": "Trous Non Clotures"
+     }
+    },
+    "type": "object",
+    "required": [
+     "trous",
+     "metres_lineaires",
+     "duree_moyenne_min",
+     "utilisation_foreuse",
+     "trous_non_clotures"
+    ],
+    "title": "Foration"
+   },
    "HTTPValidationError": {
     "properties": {
      "detail": {
@@ -8197,6 +8437,50 @@
     },
     "type": "object",
     "title": "HTTPValidationError"
+   },
+   "Indicateurs": {
+    "properties": {
+     "periode": {
+      "$ref": "#/components/schemas/Periode"
+     },
+     "production": {
+      "$ref": "#/components/schemas/Production"
+     },
+     "foration": {
+      "$ref": "#/components/schemas/Foration"
+     },
+     "engins": {
+      "$ref": "#/components/schemas/Engins"
+     },
+     "causes_arret": {
+      "items": {
+       "$ref": "#/components/schemas/CauseArret"
+      },
+      "type": "array",
+      "title": "Causes Arret"
+     },
+     "serie": {
+      "items": {
+       "$ref": "#/components/schemas/PointSerie"
+      },
+      "type": "array",
+      "title": "Serie"
+     },
+     "collecte": {
+      "$ref": "#/components/schemas/Collecte"
+     }
+    },
+    "type": "object",
+    "required": [
+     "periode",
+     "production",
+     "foration",
+     "engins",
+     "causes_arret",
+     "serie",
+     "collecte"
+    ],
+    "title": "Indicateurs"
    },
    "Jetons": {
     "properties": {
@@ -8980,6 +9264,38 @@
     "title": "ParametragePoste",
     "description": "Tout ce dont un terminal a besoin pour travailler hors ligne.\n\nRenvoyé en un seul appel au démarrage de journée, filtré sur le site de\nl'agent : une dizaine d'engins, pas cent (ch. 8.2)."
    },
+   "Periode": {
+    "properties": {
+     "du": {
+      "type": "string",
+      "format": "date",
+      "title": "Du"
+     },
+     "au": {
+      "type": "string",
+      "format": "date",
+      "title": "Au"
+     },
+     "site": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Site"
+     }
+    },
+    "type": "object",
+    "required": [
+     "du",
+     "au",
+     "site"
+    ],
+    "title": "Periode"
+   },
    "PersonnelEntree": {
     "properties": {
      "matricule": {
@@ -9510,6 +9826,40 @@
     ],
     "title": "PeseeSortie"
    },
+   "PointSerie": {
+    "properties": {
+     "jour": {
+      "type": "string",
+      "format": "date",
+      "title": "Jour"
+     },
+     "rotations": {
+      "type": "integer",
+      "title": "Rotations"
+     },
+     "trous": {
+      "type": "integer",
+      "title": "Trous"
+     },
+     "tonnage_pese_t": {
+      "type": "number",
+      "title": "Tonnage Pese T"
+     },
+     "tonnage_estime_t": {
+      "type": "number",
+      "title": "Tonnage Estime T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "jour",
+     "rotations",
+     "trous",
+     "tonnage_pese_t",
+     "tonnage_estime_t"
+    ],
+    "title": "PointSerie"
+   },
    "PosteTravail": {
     "type": "string",
     "enum": [
@@ -9822,6 +10172,51 @@
      "devise"
     ],
     "title": "PrestationMinageSortie"
+   },
+   "Production": {
+    "properties": {
+     "rotations": {
+      "type": "integer",
+      "title": "Rotations"
+     },
+     "dumpers_actifs": {
+      "type": "integer",
+      "title": "Dumpers Actifs"
+     },
+     "tonnage_pese_t": {
+      "type": "number",
+      "title": "Tonnage Pese T"
+     },
+     "tonnage_estime_t": {
+      "type": "number",
+      "title": "Tonnage Estime T"
+     },
+     "part_estimee_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Part Estimee Pct"
+     },
+     "lignes_pesees": {
+      "type": "integer",
+      "title": "Lignes Pesees"
+     }
+    },
+    "type": "object",
+    "required": [
+     "rotations",
+     "dumpers_actifs",
+     "tonnage_pese_t",
+     "tonnage_estime_t",
+     "part_estimee_pct",
+     "lignes_pesees"
+    ],
+    "title": "Production"
    },
    "ProduitEntree": {
     "properties": {

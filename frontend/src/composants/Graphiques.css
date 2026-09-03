@@ -1,0 +1,182 @@
+/* ---- Tuiles d'indicateur ------------------------------------------- */
+
+.tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 1px;
+  background: var(--bordure);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  overflow: hidden;
+}
+
+.tuile { background: var(--surface); padding: 14px 16px 15px; }
+.tuile--alerte { background: var(--ambre-pale); }
+
+.tuile__libelle {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+}
+
+.tuile__valeur {
+  margin: 4px 0 0;
+  font-family: var(--titre);
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--bleu);
+  font-variant-numeric: tabular-nums;
+}
+.tuile--alerte .tuile__valeur { color: var(--ambre); }
+.tuile__unite { font-size: 14px; font-weight: 600; margin-left: 4px; color: var(--texte-doux); }
+.tuile__vide { color: var(--texte-faible); }
+.tuile__aide { margin: 3px 0 0; font-size: 12px; color: var(--texte-doux); line-height: 1.35; }
+
+/* ---- Pesé / estimé -------------------------------------------------- */
+
+.parts__barre { width: 100%; height: 22px; display: block; }
+
+.parts__legende {
+  list-style: none;
+  margin: 11px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 26px;
+  font-size: 13px;
+  color: var(--texte-doux);
+}
+.parts__legende li { display: flex; align-items: center; gap: 8px; }
+.parts__legende strong { color: var(--texte); font-variant-numeric: tabular-nums; }
+
+.parts__puce { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+.parts__puce--pese { background: var(--bleu); }
+.parts__puce--estime {
+  background: repeating-linear-gradient(
+    45deg, var(--ambre-pale) 0 2px, var(--ambre) 2px 4px
+  );
+}
+
+/* ---- Pareto --------------------------------------------------------- */
+
+.pareto__avis {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--texte-doux);
+  border-left: 3px solid var(--bordure-forte);
+  padding-left: 10px;
+}
+
+.pareto__liste { list-style: none; margin: 0; padding: 0; }
+
+.pareto__ligne {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.1fr) minmax(80px, 3fr) 78px minmax(96px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+}
+
+.pareto__nom { font-size: 13.5px; }
+.pareto__piste { background: var(--surface-2); border-radius: var(--rayon-s); height: 15px; }
+
+/* Extrémité arrondie côté donnée seulement : la base reste franche, elle
+   marque le zéro. */
+.pareto__barre {
+  display: block;
+  height: 15px;
+  border-radius: 0 4px 4px 0;
+  min-width: 2px;
+}
+
+.pareto__valeur {
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.pareto__detail { font-size: 12.5px; color: var(--texte-faible); }
+.pareto__detail--partiel { color: var(--ambre); }
+
+.pareto__pied {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bordure);
+}
+.pareto__cumul { margin: 0; font-size: 13px; color: var(--texte-doux); }
+
+/* ---- Légendes ------------------------------------------------------- */
+
+.legende {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: 12.5px;
+  color: var(--texte-doux);
+}
+.legende li { display: flex; align-items: center; gap: 7px; }
+.legende__puce { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+.legende__trait { width: 18px; height: 2px; flex: none; }
+.legende__trait--0 { background: #2E74B5; }
+.legende__trait--1 {
+  background: repeating-linear-gradient(90deg, #C96A16 0 5px, transparent 5px 8px);
+}
+
+/* ---- Courbes -------------------------------------------------------- */
+
+.courbes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px 26px;
+}
+
+.courbe { margin: 0; }
+.courbe__titre { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.courbe__unite { font-weight: 400; color: var(--texte-faible); }
+.courbe__cadre { position: relative; }
+.courbe__svg { width: 100%; height: auto; display: block; }
+
+.courbe__grille { stroke: var(--bordure); stroke-width: 1; }
+.courbe__graduation { font-size: 9px; fill: var(--texte-faible); text-anchor: end; }
+.courbe__jour { font-size: 9px; fill: var(--texte-faible); }
+.courbe__traceur { stroke: var(--bordure-forte); stroke-width: 1; }
+
+.courbe__trait { stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.courbe__trait--0 { stroke: #2E74B5; }
+.courbe__trait--1 { stroke: #C96A16; }
+
+/* Un anneau de la couleur du fond détache le point de la courbe qu'il
+   croise, sans quoi deux séries qui se coupent forment une tache. */
+.courbe__point { stroke: var(--surface); stroke-width: 2; }
+.courbe__point--0 { fill: #2E74B5; }
+.courbe__point--1 { fill: #C96A16; }
+
+.courbe__infobulle {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--surface);
+  border: 1px solid var(--bordure-forte);
+  border-radius: var(--rayon-s);
+  box-shadow: var(--ombre);
+  padding: 6px 9px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--texte-doux);
+}
+.courbe__infobulle strong { color: var(--texte); }

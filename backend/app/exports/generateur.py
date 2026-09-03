@@ -169,7 +169,9 @@ def generer_excel(
     feuille = classeur.active
     feuille.title = "Donnees"
 
-    entete_fond = PatternFill("solid", fgColor="1F3864")
+    # Marine de la charte CADERAC. C'est le seul endroit où la couleur
+    # de la marque quitte l'application pour voyager dans un fichier.
+    entete_fond = PatternFill("solid", fgColor="003559")
     entete_police = Font(color="FFFFFF", bold=True)
 
     feuille.append(colonnes)

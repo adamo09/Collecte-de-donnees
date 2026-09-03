@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 
 import { Bouton, Champ, Encart } from '@/composants/Communs';
 import { useSession } from '@/contextes/Session';
+import logoCaderac from '@/assets/logo-caderac.png';
 import './Connexion.css';
 
 export default function EcranConnexion() {
@@ -29,9 +30,12 @@ export default function EcranConnexion() {
   return (
     <main className="connexion">
       <form className="connexion__boite" onSubmit={soumettre}>
+        {/* Le logo porte déjà le nom : le titre textuel ferait doublon.
+            Le nom reste accessible par l'attribut alt et par le titre du
+            document. */}
+        <img className="connexion__logo" src={logoCaderac} alt="CADERAC Carrières" />
+        <h1 className="connexion__titre">Contrôle et validation des données terrain</h1>
         <p className="connexion__marque">Kossihouen · Bouaké · Aboisso · Laoudi Ba</p>
-        <h1 className="connexion__titre">CADERAC</h1>
-        <p className="connexion__sous-titre">Contrôle et validation des données terrain</p>
 
         {erreur ? (
           <Encart ton="erreur">{erreur}</Encart>

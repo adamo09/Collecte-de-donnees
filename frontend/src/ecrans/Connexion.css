@@ -25,17 +25,22 @@
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--texte-faible);
-  margin: 0;
+  text-align: center;
+  margin: 0 0 4px;
+}
+/* La boîte est blanche : le logo, marine sur fond transparent, s'y pose
+   sans plaque intermédiaire. */
+.connexion__logo {
+  display: block;
+  height: 104px;
+  width: auto;
+  margin: 2px auto 2px;
 }
 .connexion__titre {
-  font-size: 38px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  color: var(--bleu);
-  margin: 0;
-}
-.connexion__sous-titre {
-  margin: -10px 0 4px;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--texte-doux);
-  font-size: 14px;
+  text-align: center;
+  margin: -6px 0 0;
+  line-height: 1.35;
 }

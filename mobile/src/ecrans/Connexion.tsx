@@ -5,10 +5,19 @@
  */
 
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { Bandeau, Bouton, Champ } from '@/composants/Communs';
 import { useSession } from '@/contextes/Session';
+import logoCaderac from '@/assets/logo-caderac.png';
 import { couleurs, espacement } from '@/utils/theme';
 
 export default function EcranConnexion() {
@@ -37,7 +46,16 @@ export default function EcranConnexion() {
     >
       <ScrollView contentContainerStyle={styles.contenu}>
         <View style={styles.entete}>
-          <Text style={styles.titre}>CADERAC</Text>
+          {/* Le logo porte le nom : le répéter en dessous ferait doublon.
+              accessibilityLabel le restitue aux lecteurs d'écran. */}
+          <Image
+            source={logoCaderac}
+            style={styles.logo}
+            resizeMode="contain"
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel="CADERAC Carrières"
+          />
           <Text style={styles.sousTitre}>Collecte terrain</Text>
         </View>
 
@@ -80,8 +98,10 @@ const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: couleurs.fond },
   contenu: { padding: espacement.l, paddingTop: espacement.xl * 2 },
   entete: { alignItems: 'center', marginBottom: espacement.xl },
-  titre: { fontSize: 40, fontWeight: '900', color: couleurs.primaire, letterSpacing: 3 },
-  sousTitre: { fontSize: 17, color: couleurs.texteFaible, marginTop: espacement.xs },
+  // Le fond de l'écran est clair : le logo, marine sur fond transparent,
+  // s'y pose sans plaque intermédiaire.
+  logo: { width: 168, height: 135 },
+  sousTitre: { fontSize: 17, color: couleurs.texteFaible, marginTop: espacement.s },
   note: {
     marginTop: espacement.l,
     fontSize: 13,

@@ -11,3 +11,14 @@
   flex-wrap: wrap;
   padding: 0 16px 16px;
 }
+
+/* Trois formats, trois usages : le dire évite qu'on télécharge le PDF
+   en croyant y trouver toutes les colonnes. */
+.export__formats {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--texte-doux);
+  max-width: 84ch;
+  line-height: 1.5;
+}
+.export__formats strong { color: var(--texte); font-weight: 600; }

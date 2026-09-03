@@ -241,3 +241,38 @@ def test_un_agent_de_terrain_ne_telecharge_pas_les_exports(client, entetes, parc
 def test_un_export_inconnu_retourne_404(client, entetes):
     reponse = client.get("/api/v1/exports/inexistant", headers=entetes("controleur"))
     assert reponse.status_code == 404
+
+
+def test_l_export_pdf_est_un_pdf_valide(client, entetes, parc, session):
+    """Le PDF est un document imprimable, pas un jeu de données."""
+    reponse = client.get(
+        "/api/v1/exports/rotations/fichier",
+        params={"format": "pdf"},
+        headers=entetes("controleur"),
+    )
+    assert reponse.status_code == 200, reponse.text
+    assert reponse.headers["content-type"] == "application/pdf"
+    assert reponse.content.startswith(b"%PDF-")
+    assert ".pdf" in reponse.headers["content-disposition"]
+
+
+def test_le_pdf_ne_retient_qu_une_partie_des_colonnes(client, entetes, parc):
+    """Vingt-six colonnes ne tiennent pas sur une page : la sélection est
+    déclarée dans le catalogue, pas laissée au hasard."""
+    from app.exports.generateur import _colonnes_pdf
+    from app.exports.vues import CATALOGUE
+
+    for nom, definition in CATALOGUE.items():
+        assert definition.colonnes_pdf, f"{nom} n'a pas de colonnes PDF déclarées"
+        retenues = _colonnes_pdf(definition, list(definition.colonnes_pdf))
+        assert retenues, nom
+        assert len(retenues) <= 12, f"{nom} : trop de colonnes pour une page"
+
+
+def test_un_format_inconnu_est_refuse(client, entetes, parc):
+    reponse = client.get(
+        "/api/v1/exports/rotations/fichier",
+        params={"format": "docx"},
+        headers=entetes("controleur"),
+    )
+    assert reponse.status_code == 422

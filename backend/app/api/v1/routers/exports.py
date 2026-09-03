@@ -15,6 +15,7 @@ from app.exports.generateur import (
     VueInconnue,
     generer_csv,
     generer_excel,
+    generer_pdf,
     lire,
     resoudre_vue,
 )
@@ -118,14 +119,14 @@ def consulter_export(
 
 @routeur.get(
     "/{nom_export}/fichier",
-    summary="Télécharger un export en Excel ou CSV",
+    summary="Télécharger un export en Excel, CSV ou PDF",
     response_class=Response,
 )
 def telecharger_export(
     session: SessionBD,
     utilisateur: ExigeSuperviseur,
     nom_export: str,
-    format: str = Query(default="xlsx", pattern="^(xlsx|csv)$"),
+    format: str = Query(default="xlsx", pattern="^(xlsx|csv|pdf)$"),
     site: str | None = None,
     du: date | None = None,
     au: date | None = None,
@@ -174,19 +175,22 @@ def telecharger_export(
     morceaux.append(horodatage)
     nom_fichier = "_".join(morceaux)
 
+    contexte = {
+        "Site": site or "tous",
+        "Période": f"{du or 'origine'} → {au or 'aujourd’hui'}",
+        "Exporté par": utilisateur.nom_complet,
+    }
+    contexte.update({cle: valeur for cle, valeur in filtres.items() if valeur is not None})
+
     if format == "csv":
         contenu = generer_csv(colonnes, lignes)
         type_mime = "text/csv; charset=utf-8"
         extension = "csv"
+    elif format == "pdf":
+        contenu = generer_pdf(definition, colonnes, lignes, contexte)
+        type_mime = "application/pdf"
+        extension = "pdf"
     else:
-        contexte = {
-            "Site": site or "tous",
-            "Période": f"{du or 'origine'} → {au or 'aujourd’hui'}",
-            "Exporté par": utilisateur.nom_complet,
-        }
-        contexte.update(
-            {cle: valeur for cle, valeur in filtres.items() if valeur is not None}
-        )
         contenu = generer_excel(definition, colonnes, lignes, contexte)
         type_mime = TYPE_EXCEL
         extension = "xlsx"

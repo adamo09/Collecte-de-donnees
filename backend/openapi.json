@@ -5051,7 +5051,7 @@
     "tags": [
      "Exports"
     ],
-    "summary": "Télécharger un export en Excel ou CSV",
+    "summary": "Télécharger un export en Excel, CSV ou PDF",
     "description": "Produit le fichier livré au gestionnaire externe.",
     "operationId": "exports_telecharger_export",
     "security": [
@@ -5075,7 +5075,7 @@
       "required": false,
       "schema": {
        "type": "string",
-       "pattern": "^(xlsx|csv)$",
+       "pattern": "^(xlsx|csv|pdf)$",
        "default": "xlsx",
        "title": "Format"
       }

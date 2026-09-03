@@ -1137,7 +1137,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Télécharger un export en Excel ou CSV
+         * Télécharger un export en Excel, CSV ou PDF
          * @description Produit le fichier livré au gestionnaire externe.
          */
         get: operations["exports_telecharger_export"];

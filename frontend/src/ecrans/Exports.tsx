@@ -59,7 +59,7 @@ export default function EcranExports() {
 
   /** Le téléchargement passe par fetch plutôt que par un lien : le jeton
    *  d'authentification voyage dans un en-tête, pas dans l'URL. */
-  const telecharger = async (format: 'xlsx' | 'csv') => {
+  const telecharger = async (format: 'xlsx' | 'csv' | 'pdf') => {
     setErreur(null);
     setEnCours(true);
     try {
@@ -144,7 +144,21 @@ export default function EcranExports() {
           <Bouton variante="secondaire" onClick={() => void telecharger('csv')} disabled={enCours}>
             Télécharger en CSV
           </Bouton>
+          <Bouton
+            variante="secondaire"
+            onClick={() => void telecharger('pdf')}
+            disabled={enCours}
+            titre="Édition imprimable, colonnes principales seulement"
+          >
+            Télécharger en PDF
+          </Bouton>
         </div>
+        <p className="export__formats">
+          <strong>Excel</strong> et <strong>CSV</strong> portent l'intégralité des
+          colonnes : ce sont les formats de travail. Le <strong>PDF</strong> est une
+          édition abrégée, à imprimer ou à joindre à un dossier — il ne retient que les
+          colonnes principales.
+        </p>
       </Carte>
 
       <Carte

@@ -88,10 +88,10 @@ def test_toute_modification_est_journalisee(client, entetes, agent_reference):
         headers=entetes("controleur"),
     ).json()
 
-    assert len(audit) == 1
-    assert audit[0]["champ"] == "centre_cout"
-    assert audit[0]["ancienne_valeur"] == "CP03"
-    assert audit[0]["nouvelle_valeur"] == "CP09"
+    assert audit["total"] == 1
+    assert audit["elements"][0]["champ"] == "centre_cout"
+    assert audit["elements"][0]["ancienne_valeur"] == "CP03"
+    assert audit["elements"][0]["nouvelle_valeur"] == "CP09"
 
 
 def test_une_modification_sans_ecart_n_encombre_pas_le_journal(
@@ -111,7 +111,7 @@ def test_une_modification_sans_ecart_n_encombre_pas_le_journal(
         params={"table_cible": "personnel", "enregistrement": matricule},
         headers=entetes("controleur"),
     ).json()
-    assert audit == []
+    assert audit["total"] == 0
 
 
 def test_le_matricule_n_est_pas_modifiable(client, entetes, agent_reference):
@@ -190,8 +190,8 @@ def test_le_parcours_d_un_produit_se_remplace_en_entier(client, entetes, parc):
         params={"table_cible": "produit_parcours", "enregistrement": cree["id"]},
         headers=entetes("controleur"),
     ).json()
-    assert len(audit) == 1
-    assert "secondaire" in (audit[0]["nouvelle_valeur"] or "")
+    assert audit["total"] == 1
+    assert "secondaire" in (audit["elements"][0]["nouvelle_valeur"] or "")
 
 
 def test_un_parcours_avec_deux_fois_le_meme_niveau_est_refuse(client, entetes):

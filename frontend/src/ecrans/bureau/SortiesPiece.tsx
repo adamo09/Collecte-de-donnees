@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, Manques, StatutPastille, Vide, jourCourt,
+  Bouton, Carte, Champ, Chargement, Encart, Pagination, Manques, StatutPastille, Vide, jourCourt,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import { nombreOuNull, texteOuNull, useEcriture } from '@/utils/mutations';
@@ -40,6 +40,11 @@ export default function EcranSortiesPiece() {
   const engins = useEngins();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [decalage, setDecalage] = useState(0);
+
+  // Cinquante lignes : de quoi retrouver une saisie récente sans
+  // charger une année d'historique pour y parvenir.
+  const LIMITE = 50;
 
   const equipements = useQuery({
     queryKey: ['equipements'],
@@ -52,10 +57,10 @@ export default function EcranSortiesPiece() {
   });
 
   const sorties = useQuery({
-    queryKey: ['sorties-piece'],
+    queryKey: ['sorties-piece', decalage],
     queryFn: async () => {
       const { data, error } = await api.GET('/api/v1/concassage/sorties-piece', {
-        params: { query: { limite: 200 } as never },
+        params: { query: { limite: LIMITE, decalage } as never },
       });
       if (error) throw new Error(messageErreur(error));
       return data!;
@@ -75,6 +80,9 @@ export default function EcranSortiesPiece() {
     onSucces: () => {
       setFormulaire(VIDE);
       setModaleOuverte(false);
+      // La liste est classée du plus récent au plus ancien : une saisie
+      // faite depuis la page 3 n'apparaîtrait nulle part sans ce retour.
+      setDecalage(0);
     },
   });
 
@@ -166,6 +174,13 @@ export default function EcranSortiesPiece() {
             </table>
           </div>
         )}
+        <Pagination
+          total={sorties.data?.total ?? 0}
+          limite={LIMITE}
+          decalage={decalage}
+          nom="sortie"
+          onChanger={setDecalage}
+        />
       </Carte>
 
       <Modale

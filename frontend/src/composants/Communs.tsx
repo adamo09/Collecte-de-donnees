@@ -161,3 +161,69 @@ export function jourCourt(valeur: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
+
+/**
+ * Pagination d'une liste.
+ *
+ * Le compteur dit le total réel, pas le nombre de lignes affichées. C'est
+ * toute la différence : une file ordonnée du plus ancien au plus récent,
+ * plafonnée sans total, laisse croire qu'elle est à jour alors qu'elle
+ * cache l'arriéré — ou, pire, le travail du jour derrière lui.
+ *
+ * Rien ne s'affiche quand tout tient sur une page : une pagination inerte
+ * n'apprend rien et occupe la place d'un chiffre utile.
+ */
+export function Pagination({
+  total,
+  limite,
+  decalage,
+  onChanger,
+  nom = 'élément',
+}: {
+  total: number;
+  limite: number;
+  decalage: number;
+  onChanger: (decalage: number) => void;
+  /** Au singulier : « rotation », « ligne », « compte ». */
+  nom?: string;
+}) {
+  if (total <= limite) return null;
+
+  const premier = decalage + 1;
+  const dernier = Math.min(decalage + limite, total);
+  const page = Math.floor(decalage / limite) + 1;
+  const pages = Math.ceil(total / limite);
+
+  return (
+    <nav className="pagination" aria-label={`Pagination des ${nom}s`}>
+      <p className="pagination__compte">
+        <strong>
+          {premier}–{dernier}
+        </strong>{' '}
+        sur <strong>{total.toLocaleString('fr-FR')}</strong> {nom}
+        {total > 1 ? 's' : ''}
+      </p>
+      <div className="pagination__boutons">
+        <button
+          type="button"
+          className="pagination__bouton"
+          onClick={() => onChanger(Math.max(decalage - limite, 0))}
+          disabled={decalage === 0}
+        >
+          Précédentes
+        </button>
+        <span className="pagination__page">
+          page {page} sur {pages}
+        </span>
+        <button
+          type="button"
+          className="pagination__bouton"
+          onClick={() => onChanger(decalage + limite)}
+          disabled={dernier >= total}
+        >
+          Suivantes
+        </button>
+      </div>
+    </nav>
+  );
+}

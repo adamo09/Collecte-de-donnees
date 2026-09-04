@@ -17,6 +17,7 @@ import {
   Champ,
   Chargement,
   Encart,
+  Pagination,
   StatutPastille,
   Vide,
   dateCourte,
@@ -59,15 +60,20 @@ export default function EcranFileValidation() {
   const [table, setTable] = useState<string>('');
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const [motif, setMotif] = useState('');
+  const [decalage, setDecalage] = useState(0);
   const [retour, setRetour] = useState<{ ton: 'succes' | 'erreur'; texte: string } | null>(null);
 
+  // Cent lignes par page : c'est ce qu'un contrôleur traite d'un trait
+  // avant de perdre le fil de ce qu'il a déjà coché.
+  const LIMITE = 100;
+
   const parametres = useMemo(() => {
-    const p: Record<string, string | number> = { limite: 500 };
+    const p: Record<string, string | number> = { limite: LIMITE, decalage };
     if (siteId) p.site_id = Number(siteId);
     if (statut) p.statut = statut;
     if (table) p.table_cible = table;
     return p;
-  }, [siteId, statut, table]);
+  }, [siteId, statut, table, decalage]);
 
   const file = useQuery({
     queryKey: ['file-validation', parametres],
@@ -76,11 +82,12 @@ export default function EcranFileValidation() {
         params: { query: parametres as never },
       });
       if (error) throw new Error(messageErreur(error));
-      return (data ?? []) as Ligne[];
+      return data as { total: number; limite: number; decalage: number; elements: Ligne[] };
     },
   });
 
-  const lignes = file.data ?? [];
+  const lignes = file.data?.elements ?? [];
+  const total = file.data?.total ?? 0;
 
   // Une action en lot ne porte que sur une seule table à la fois :
   // l'endpoint de validation groupée est typé par table.
@@ -91,6 +98,14 @@ export default function EcranFileValidation() {
   }, [lignes, selection]);
 
   const tableUnique = tablesSelectionnees.size === 1 ? [...tablesSelectionnees][0]! : null;
+
+  /** Un filtre modifié ramène au début : conserver le décalage afficherait
+   *  une page vide sur une file plus courte, sans dire pourquoi. */
+  const filtrer = (appliquer: () => void) => {
+    appliquer();
+    setDecalage(0);
+    setSelection(new Set());
+  };
 
   const changerStatut = useMutation({
     mutationFn: async ({ vers }: { vers: 'controlee' | 'validee' | 'rejetee' }) => {
@@ -164,7 +179,7 @@ export default function EcranFileValidation() {
           <Champ libelle="Site">
             <select
               value={siteId}
-              onChange={(e) => setSiteId(e.target.value)}
+              onChange={(e) => filtrer(() => setSiteId(e.target.value))}
               disabled={!voitTousLesSites}
             >
               <option value="">
@@ -177,7 +192,7 @@ export default function EcranFileValidation() {
           </Champ>
 
           <Champ libelle="Statut">
-            <select value={statut} onChange={(e) => setStatut(e.target.value)}>
+            <select value={statut} onChange={(e) => filtrer(() => setStatut(e.target.value))}>
               <option value="">Brute et contrôlée</option>
               <option value="brute">Brute uniquement</option>
               <option value="controlee">Contrôlée uniquement</option>
@@ -185,7 +200,7 @@ export default function EcranFileValidation() {
           </Champ>
 
           <Champ libelle="Type de donnée">
-            <select value={table} onChange={(e) => setTable(e.target.value)}>
+            <select value={table} onChange={(e) => filtrer(() => setTable(e.target.value))}>
               <option value="">Toutes</option>
               {Object.entries(LIBELLE_TABLE).map(([valeur, libelle]) => (
                 <option key={valeur} value={valeur}>{libelle}</option>
@@ -194,7 +209,10 @@ export default function EcranFileValidation() {
           </Champ>
 
           <div className="filtres__compteur">
-            <strong>{lignes.length}</strong> en attente
+            <strong>{total.toLocaleString('fr-FR')}</strong> en attente
+            {total > lignes.length && (
+              <span className="filtres__maj"> · {lignes.length} affichées</span>
+            )}
             {file.isFetching && <span className="filtres__maj"> · actualisation…</span>}
           </div>
         </div>
@@ -314,6 +332,18 @@ export default function EcranFileValidation() {
             </table>
           </div>
         )}
+        <Pagination
+          total={total}
+          limite={LIMITE}
+          decalage={decalage}
+          nom="donnée"
+          onChanger={(vers) => {
+            setDecalage(vers);
+            // La sélection porte sur des lignes qui vont disparaître de
+            // l'écran : la garder ferait agir en lot sur l'invisible.
+            setSelection(new Set());
+          }}
+        />
       </Carte>
     </>
   );

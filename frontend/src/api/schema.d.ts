@@ -983,6 +983,11 @@ export interface paths {
         /**
          * File d'attente du contrôle
          * @description Tout ce qui reste à contrôler ou à valider, toutes tables confondues.
+         *
+         *     Le total est compté à part, et c'est le point important : la file est
+         *     ordonnée du plus ancien au plus récent, si bien qu'un plafond sans total
+         *     escamote les données du jour derrière un arriéré. Le contrôleur croirait
+         *     sa file à jour alors qu'il n'en voit que le début.
          */
         get: operations["validation_file_validation"];
         put?: never;
@@ -1075,6 +1080,10 @@ export interface paths {
         /**
          * Consulter le journal d'audit
          * @description C'est ce journal qui permet de défendre un chiffre contesté (ch. 5.1).
+         *
+         *     Le décalage existait déjà, mais sans total : on pouvait avancer dans le
+         *     journal sans jamais savoir où il s'arrête. Un journal d'audit qu'on ne
+         *     peut pas parcourir jusqu'au bout ne défend rien.
          */
         get: operations["validation_consulter_audit"];
         put?: never;
@@ -2384,6 +2393,34 @@ export interface components {
             decalage: number;
             /** Elements */
             elements: components["schemas"]["EvenementEquipementSortie"][];
+        };
+        /** Page[LigneAudit] */
+        Page_LigneAudit_: {
+            /**
+             * Total
+             * @description Nombre total d'enregistrements correspondant au filtre
+             */
+            total: number;
+            /** Limite */
+            limite: number;
+            /** Decalage */
+            decalage: number;
+            /** Elements */
+            elements: components["schemas"]["LigneAudit"][];
+        };
+        /** Page[LigneFileValidation] */
+        Page_LigneFileValidation_: {
+            /**
+             * Total
+             * @description Nombre total d'enregistrements correspondant au filtre
+             */
+            total: number;
+            /** Limite */
+            limite: number;
+            /** Decalage */
+            decalage: number;
+            /** Elements */
+            elements: components["schemas"]["LigneFileValidation"][];
         };
         /** Page[PeseeSortie] */
         Page_PeseeSortie_: {
@@ -5864,6 +5901,7 @@ export interface operations {
                 statut?: components["schemas"]["StatutValidation"] | null;
                 table_cible?: string | null;
                 limite?: number;
+                decalage?: number;
             };
             header?: never;
             path?: never;
@@ -5877,7 +5915,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LigneFileValidation"][];
+                    "application/json": components["schemas"]["Page_LigneFileValidation_"];
                 };
             };
             /** @description Validation Error */
@@ -6021,7 +6059,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LigneAudit"][];
+                    "application/json": components["schemas"]["Page_LigneAudit_"];
                 };
             };
             /** @description Validation Error */

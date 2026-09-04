@@ -13,6 +13,7 @@ from app.core.dependances import (
 )
 from app.models.enums import StatutValidation
 from app.models.tracabilite import AuditModification
+from app.schemas.communs import Page
 from app.schemas.validation import (
     ChangementStatutLot,
     DemandeChangementStatut,
@@ -44,9 +45,7 @@ def _modele_ou_404(nom_table: str):
     try:
         return resoudre_modele(nom_table)
     except KeyError as erreur:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=str(erreur)
-        ) from erreur
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erreur)) from erreur
 
 
 @routeur.get("/tables", summary="Tables soumises au workflow de validation")
@@ -56,20 +55,25 @@ def lister_tables() -> dict:
 
 @routeur.get(
     "/file",
-    response_model=list[LigneFileValidation],
+    response_model=Page[LigneFileValidation],
     summary="File d'attente du contrôle",
 )
 def file_validation(
     session: SessionBD,
     utilisateur: UtilisateurConnecte,
     site_id: int | None = None,
-    statut: StatutValidation | None = Query(
-        default=None, description="brute ou controlee"
-    ),
+    statut: StatutValidation | None = Query(default=None, description="brute ou controlee"),
     table_cible: str | None = None,
     limite: int = Query(default=200, ge=1, le=1000),
-) -> list[LigneFileValidation]:
-    """Tout ce qui reste à contrôler ou à valider, toutes tables confondues."""
+    decalage: int = Query(default=0, ge=0),
+) -> Page[LigneFileValidation]:
+    """Tout ce qui reste à contrôler ou à valider, toutes tables confondues.
+
+    Le total est compté à part, et c'est le point important : la file est
+    ordonnée du plus ancien au plus récent, si bien qu'un plafond sans total
+    escamote les données du jour derrière un arriéré. Le contrôleur croirait
+    sa file à jour alors qu'il n'en voit que le début.
+    """
     conditions: list[str] = []
     parametres_sql: dict = {"limite": limite}
 
@@ -93,15 +97,26 @@ def file_validation(
         parametres_sql["table_cible"] = table_cible
 
     clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    total = session.execute(
+        text(f"SELECT count(*) FROM v_pilotage_file_validation {clause}"),
+        parametres_sql,
+    ).scalar_one()
+
     lignes = session.execute(
         text(
             "SELECT table_cible, id, site_id, statut, saisi_le, recu_le, auteur_id "
             f"FROM v_pilotage_file_validation {clause} "
-            "ORDER BY recu_le ASC LIMIT :limite"
+            "ORDER BY recu_le ASC LIMIT :limite OFFSET :decalage"
         ),
-        parametres_sql,
+        {**parametres_sql, "decalage": decalage},
     ).mappings()
-    return [LigneFileValidation.model_validate(dict(ligne)) for ligne in lignes]
+    return Page[LigneFileValidation](
+        total=total,
+        limite=limite,
+        decalage=decalage,
+        elements=[LigneFileValidation.model_validate(dict(ligne)) for ligne in lignes],
+    )
 
 
 @routeur.post(
@@ -124,9 +139,7 @@ def modifier_statut(
     modele = _modele_ou_404(table_cible)
     objet = session.get(modele, enregistrement_id)
     if objet is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Enregistrement inconnu."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Enregistrement inconnu.")
 
     site = obtenir_site(objet)
     if site is not None:
@@ -137,9 +150,7 @@ def modifier_statut(
             session, objet, table_cible, demande.nouveau_statut, utilisateur, demande.motif
         )
     except (TransitionInterdite, MotifRequis) as erreur:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=str(erreur)
-        ) from erreur
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(erreur)) from erreur
 
     session.commit()
     return ResultatChangementStatut(
@@ -211,9 +222,7 @@ def modifier_statut_lot(
             )
         except (TransitionInterdite, MotifRequis) as erreur:
             details.append(
-                ResultatChangementStatut(
-                    id=identifiant, applique=False, erreur=str(erreur)
-                )
+                ResultatChangementStatut(id=identifiant, applique=False, erreur=str(erreur))
             )
 
     session.commit()
@@ -249,9 +258,7 @@ def corriger(
     modele = _modele_ou_404(table_cible)
     objet = session.get(modele, enregistrement_id)
     if objet is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Enregistrement inconnu."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Enregistrement inconnu.")
 
     site = obtenir_site(objet)
     if site is not None:
@@ -272,9 +279,7 @@ def corriger(
     return lignes
 
 
-@routeur.get(
-    "/audit", response_model=list[LigneAudit], summary="Consulter le journal d'audit"
-)
+@routeur.get("/audit", response_model=Page[LigneAudit], summary="Consulter le journal d'audit")
 def consulter_audit(
     session: SessionBD,
     _: ExigeSuperviseur,
@@ -282,13 +287,24 @@ def consulter_audit(
     enregistrement: str | None = None,
     limite: int = Query(default=100, ge=1, le=1000),
     decalage: int = Query(default=0, ge=0),
-) -> list[AuditModification]:
-    """C'est ce journal qui permet de défendre un chiffre contesté (ch. 5.1)."""
+) -> Page[LigneAudit]:
+    """C'est ce journal qui permet de défendre un chiffre contesté (ch. 5.1).
+
+    Le décalage existait déjà, mais sans total : on pouvait avancer dans le
+    journal sans jamais savoir où il s'arrête. Un journal d'audit qu'on ne
+    peut pas parcourir jusqu'au bout ne défend rien.
+    """
     requete = select(AuditModification).order_by(AuditModification.modifie_le.desc())
     if table_cible is not None:
         requete = requete.where(AuditModification.table_cible == table_cible)
     if enregistrement is not None:
         requete = requete.where(AuditModification.enregistrement == enregistrement)
-    return list(
-        session.execute(requete.limit(limite).offset(decalage)).scalars()
+
+    total = session.execute(select(text("count(*)")).select_from(requete.subquery())).scalar_one()
+    lignes = session.execute(requete.limit(limite).offset(decalage)).scalars()
+    return Page[LigneAudit](
+        total=total,
+        limite=limite,
+        decalage=decalage,
+        elements=[LigneAudit.model_validate(ligne) for ligne in lignes],
     )

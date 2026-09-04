@@ -4345,7 +4345,7 @@
      "Contrôle et validation"
     ],
     "summary": "File d'attente du contrôle",
-    "description": "Tout ce qui reste à contrôler ou à valider, toutes tables confondues.",
+    "description": "Tout ce qui reste à contrôler ou à valider, toutes tables confondues.\n\nLe total est compté à part, et c'est le point important : la file est\nordonnée du plus ancien au plus récent, si bien qu'un plafond sans total\nescamote les données du jour derrière un arriéré. Le contrôleur croirait\nsa file à jour alors qu'il n'en voit que le début.",
     "operationId": "validation_file_validation",
     "security": [
      {
@@ -4414,6 +4414,17 @@
        "default": 200,
        "title": "Limite"
       }
+     },
+     {
+      "name": "decalage",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Decalage"
+      }
      }
     ],
     "responses": {
@@ -4422,11 +4433,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "type": "array",
-         "items": {
-          "$ref": "#/components/schemas/LigneFileValidation"
-         },
-         "title": "Response Validation File Validation"
+         "$ref": "#/components/schemas/Page_LigneFileValidation_"
         }
        }
       }
@@ -4654,7 +4661,7 @@
      "Contrôle et validation"
     ],
     "summary": "Consulter le journal d'audit",
-    "description": "C'est ce journal qui permet de défendre un chiffre contesté (ch. 5.1).",
+    "description": "C'est ce journal qui permet de défendre un chiffre contesté (ch. 5.1).\n\nLe décalage existait déjà, mais sans total : on pouvait avancer dans le\njournal sans jamais savoir où il s'arrête. Un journal d'audit qu'on ne\npeut pas parcourir jusqu'au bout ne défend rien.",
     "operationId": "validation_consulter_audit",
     "security": [
      {
@@ -4724,11 +4731,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "type": "array",
-         "items": {
-          "$ref": "#/components/schemas/LigneAudit"
-         },
-         "title": "Response Validation Consulter Audit"
+         "$ref": "#/components/schemas/Page_LigneAudit_"
         }
        }
       }
@@ -8981,6 +8984,70 @@
      "elements"
     ],
     "title": "Page[EvenementEquipementSortie]"
+   },
+   "Page_LigneAudit_": {
+    "properties": {
+     "total": {
+      "type": "integer",
+      "title": "Total",
+      "description": "Nombre total d'enregistrements correspondant au filtre"
+     },
+     "limite": {
+      "type": "integer",
+      "title": "Limite"
+     },
+     "decalage": {
+      "type": "integer",
+      "title": "Decalage"
+     },
+     "elements": {
+      "items": {
+       "$ref": "#/components/schemas/LigneAudit"
+      },
+      "type": "array",
+      "title": "Elements"
+     }
+    },
+    "type": "object",
+    "required": [
+     "total",
+     "limite",
+     "decalage",
+     "elements"
+    ],
+    "title": "Page[LigneAudit]"
+   },
+   "Page_LigneFileValidation_": {
+    "properties": {
+     "total": {
+      "type": "integer",
+      "title": "Total",
+      "description": "Nombre total d'enregistrements correspondant au filtre"
+     },
+     "limite": {
+      "type": "integer",
+      "title": "Limite"
+     },
+     "decalage": {
+      "type": "integer",
+      "title": "Decalage"
+     },
+     "elements": {
+      "items": {
+       "$ref": "#/components/schemas/LigneFileValidation"
+      },
+      "type": "array",
+      "title": "Elements"
+     }
+    },
+    "type": "object",
+    "required": [
+     "total",
+     "limite",
+     "decalage",
+     "elements"
+    ],
+    "title": "Page[LigneFileValidation]"
    },
    "Page_PeseeSortie_": {
     "properties": {

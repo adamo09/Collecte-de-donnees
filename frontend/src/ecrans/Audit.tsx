@@ -10,28 +10,46 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
-import { Carte, Champ, Chargement, Encart, Vide, dateCourte } from '@/composants/Communs';
+import {
+  Carte,
+  Champ,
+  Chargement,
+  Encart,
+  Pagination,
+  Vide,
+  dateCourte,
+} from '@/composants/Communs';
 import './Audit.css';
 
 export default function EcranAudit() {
   const [table, setTable] = useState('');
   const [enregistrement, setEnregistrement] = useState('');
+  const [decalage, setDecalage] = useState(0);
+
+  const LIMITE = 100;
 
   const audit = useQuery({
-    queryKey: ['audit', table, enregistrement],
+    queryKey: ['audit', table, enregistrement, decalage],
     queryFn: async () => {
-      const query: Record<string, string | number> = { limite: 200 };
+      const query: Record<string, string | number> = { limite: LIMITE, decalage };
       if (table) query.table_cible = table;
       if (enregistrement.trim()) query.enregistrement = enregistrement.trim();
       const { data, error } = await api.GET('/api/v1/validation/audit', {
         params: { query: query as never },
       });
       if (error) throw new Error(messageErreur(error));
-      return data ?? [];
+      return data;
     },
   });
 
-  const lignes = audit.data ?? [];
+  const lignes = audit.data?.elements ?? [];
+  const total = audit.data?.total ?? 0;
+
+  /** Un filtre modifié ramène au début du journal. */
+  const filtrer = (appliquer: () => void) => {
+    appliquer();
+    setDecalage(0);
+  };
 
   return (
     <>
@@ -48,7 +66,7 @@ export default function EcranAudit() {
       <Carte>
         <div className="filtres">
           <Champ libelle="Type de donnée">
-            <select value={table} onChange={(e) => setTable(e.target.value)}>
+            <select value={table} onChange={(e) => filtrer(() => setTable(e.target.value))}>
               <option value="">Toutes</option>
               <option value="trou_forage">Trou de forage</option>
               <option value="rotation_dumper">Rotation dumper</option>
@@ -61,12 +79,12 @@ export default function EcranAudit() {
           <Champ libelle="Identifiant" aide="UUID complet de l'enregistrement.">
             <input
               value={enregistrement}
-              onChange={(e) => setEnregistrement(e.target.value)}
+              onChange={(e) => filtrer(() => setEnregistrement(e.target.value))}
               placeholder="3fa85f64-5717-…"
             />
           </Champ>
           <div className="filtres__compteur">
-            <strong>{lignes.length}</strong> modification{lignes.length > 1 ? 's' : ''}
+            <strong>{total.toLocaleString('fr-FR')}</strong> modification{total > 1 ? 's' : ''}
           </div>
         </div>
       </Carte>
@@ -106,6 +124,13 @@ export default function EcranAudit() {
             </table>
           </div>
         )}
+        <Pagination
+          total={total}
+          limite={LIMITE}
+          decalage={decalage}
+          nom="modification"
+          onChanger={setDecalage}
+        />
       </Carte>
     </>
   );

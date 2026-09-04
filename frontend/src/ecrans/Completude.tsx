@@ -35,17 +35,22 @@ export default function EcranCompletude() {
         params: { path: { nom_export: 'completude' }, query: query as never },
       });
       if (error) throw new Error(messageErreur(error));
-      return (data?.lignes ?? []) as LigneCompletude[];
+      return data as { tronque: boolean; lignes: LigneCompletude[] };
     },
   });
 
   const lignes = useMemo(() => {
     const limite = new Date();
     limite.setDate(limite.getDate() - Number(jours));
-    return [...(completude.data ?? [])]
+    return [...(completude.data?.lignes ?? [])]
       .filter((l) => new Date(String(l.jour)) >= limite)
       .sort((a, b) => String(b.jour).localeCompare(String(a.jour)));
   }, [completude.data, jours]);
+
+  // L'export de complétude ne pagine pas : au plafond, ce sont les jours
+  // les plus anciens qui manquent. Le taire laisserait croire à un site
+  // resté muet, alors qu'il n'a simplement pas été chargé.
+  const tronque = completude.data?.tronque ?? false;
 
   /** Un jour n'est « muet » que si le site avait des engins censés déclarer.
    *  Un site dont le parc n'est pas encore inventorié n'est pas en défaut :
@@ -73,6 +78,13 @@ export default function EcranCompletude() {
           </p>
         </div>
       </header>
+
+      {tronque && (
+        <Encart ton="alerte">
+          L'historique est tronqué : les jours les plus anciens ne sont pas
+          chargés. Filtrer sur un site pour voir sa période complète.
+        </Encart>
+      )}
 
       {muets.length > 0 && (
         <Encart ton="alerte">

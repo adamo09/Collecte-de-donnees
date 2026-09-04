@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, Manques, manqueLongueur, StatutPastille, Vide, dateCourte,
+  Bouton, Carte, Champ, Chargement, Encart, Manques, Pagination, manqueLongueur, StatutPastille, Vide, dateCourte,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import { useEcriture } from '@/utils/mutations';
@@ -26,6 +26,7 @@ interface Filtres {
   statut?: string;
   engin_id?: string;
   limite: number;
+  decalage: number;
 }
 
 interface Page {
@@ -174,14 +175,25 @@ export default function EcranConsultation() {
   const [champCorrige, setChampCorrige] = useState('');
   const [nouvelleValeur, setNouvelleValeur] = useState('');
   const [motif, setMotif] = useState('');
+  const [decalage, setDecalage] = useState(0);
+
+  const LIMITE = 50;
 
   const module = MODULES.find((m) => m.cle === cleModule)!;
 
+  /** Changer de module ou de filtre remet au début : garder le décalage
+   *  afficherait une page vide sur une liste plus courte. */
+  const filtrer = (appliquer: () => void) => {
+    appliquer();
+    setDecalage(0);
+  };
+
   const donnees = useQuery({
-    queryKey: ['consultation', cleModule, siteId, enginId, statut],
+    queryKey: ['consultation', cleModule, siteId, enginId, statut, decalage],
     queryFn: () =>
       module.charger({
-        limite: 200,
+        limite: LIMITE,
+        decalage,
         ...(siteId ? { site_id: Number(siteId) } : {}),
         ...(statut ? { statut } : {}),
         ...(enginId && module.filtreEngin ? { engin_id: enginId } : {}),
@@ -266,13 +278,14 @@ export default function EcranConsultation() {
                 setCleModule(e.target.value);
                 setEnginId('');
                 setSelection(null);
+                setDecalage(0);
               }}
             >
               {MODULES.map((m) => <option key={m.cle} value={m.cle}>{m.libelle}</option>)}
             </select>
           </Champ>
           <Champ libelle="Site">
-            <select value={siteId} onChange={(e) => setSiteId(e.target.value)}>
+            <select value={siteId} onChange={(e) => filtrer(() => setSiteId(e.target.value))}>
               <option value="">Tous les sites</option>
               {sites.data?.map((s) => (
                 <option key={s.id} value={s.id}>{s.code} — {s.libelle}</option>
@@ -281,7 +294,7 @@ export default function EcranConsultation() {
           </Champ>
           {module.filtreEngin && (
             <Champ libelle="Engin">
-              <select value={enginId} onChange={(e) => setEnginId(e.target.value)}>
+              <select value={enginId} onChange={(e) => filtrer(() => setEnginId(e.target.value))}>
                 <option value="">Tous</option>
                 {enginsFiltres.map((e) => (
                   <option key={e.id} value={e.id}>{e.numero_parc}</option>
@@ -290,7 +303,7 @@ export default function EcranConsultation() {
             </Champ>
           )}
           <Champ libelle="Statut">
-            <select value={statut} onChange={(e) => setStatut(e.target.value)}>
+            <select value={statut} onChange={(e) => filtrer(() => setStatut(e.target.value))}>
               <option value="">Tous</option>
               <option value="brute">Brute</option>
               <option value="controlee">Contrôlée</option>
@@ -354,6 +367,13 @@ export default function EcranConsultation() {
             </table>
           </div>
         )}
+        <Pagination
+          total={donnees.data?.total ?? 0}
+          limite={LIMITE}
+          decalage={decalage}
+          nom="enregistrement"
+          onChanger={setDecalage}
+        />
       </Carte>
 
       <Modale

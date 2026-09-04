@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, Manques, StatutPastille, Vide, jourCourt,
+  Bouton, Carte, Champ, Chargement, Encart, Pagination, Manques, StatutPastille, Vide, jourCourt,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import type { components } from '@/api/schema';
@@ -41,13 +41,18 @@ export default function EcranCharges() {
   const engins = useEngins();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [decalage, setDecalage] = useState(0);
+
+  // Cinquante lignes : de quoi retrouver une saisie récente sans
+  // charger une année d'historique pour y parvenir.
+  const LIMITE = 50;
   const [filtreEngin, setFiltreEngin] = useState('');
   const [filtreNature, setFiltreNature] = useState('');
 
   const charges = useQuery({
-    queryKey: ['charges', filtreEngin, filtreNature],
+    queryKey: ['charges', filtreEngin, filtreNature, decalage],
     queryFn: async () => {
-      const query: Record<string, string | number> = { limite: 200 };
+      const query: Record<string, string | number> = { limite: LIMITE, decalage };
       if (filtreEngin) query.engin_id = filtreEngin;
       if (filtreNature) query.nature = filtreNature;
       const { data, error } = await api.GET('/api/v1/parc/charges', {
@@ -69,6 +74,9 @@ export default function EcranCharges() {
     onSucces: () => {
       setFormulaire({ ...VIDE, engin_id: formulaire.engin_id });
       setModaleOuverte(false);
+      // La liste est classée du plus récent au plus ancien : une saisie
+      // faite depuis la page 3 n'apparaîtrait nulle part sans ce retour.
+      setDecalage(0);
     },
   });
 
@@ -100,7 +108,10 @@ export default function EcranCharges() {
       <Carte>
         <div className="filtres">
           <Champ libelle="Engin">
-            <select value={filtreEngin} onChange={(e) => setFiltreEngin(e.target.value)}>
+            <select value={filtreEngin} onChange={(e) => {
+                setFiltreEngin(e.target.value);
+                setDecalage(0);
+              }}>
               <option value="">Tous les engins</option>
               {engins.data?.map((e) => (
                 <option key={e.id} value={e.id}>{e.numero_parc}</option>
@@ -108,7 +119,10 @@ export default function EcranCharges() {
             </select>
           </Champ>
           <Champ libelle="Nature">
-            <select value={filtreNature} onChange={(e) => setFiltreNature(e.target.value)}>
+            <select value={filtreNature} onChange={(e) => {
+                setFiltreNature(e.target.value);
+                setDecalage(0);
+              }}>
               <option value="">Toutes</option>
               <option value="administrative">Administrative</option>
               <option value="fonctionnement">Fonctionnement</option>
@@ -169,6 +183,13 @@ export default function EcranCharges() {
             </table>
           </div>
         )}
+        <Pagination
+          total={charges.data?.total ?? 0}
+          limite={LIMITE}
+          decalage={decalage}
+          nom="charge"
+          onChanger={setDecalage}
+        />
       </Carte>
 
       <Modale

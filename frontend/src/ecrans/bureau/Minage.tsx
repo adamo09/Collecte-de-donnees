@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api, messageErreur } from '@/api/client';
 import {
-  Bouton, Carte, Champ, Chargement, Encart, Manques, StatutPastille, Vide, jourCourt,
+  Bouton, Carte, Champ, Chargement, Encart, Pagination, Manques, StatutPastille, Vide, jourCourt,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
 import { nombreOuNull, texteOuNull, useEcriture } from '@/utils/mutations';
@@ -37,6 +37,11 @@ export default function EcranMinage() {
   const sites = useSites();
   const [formulaire, setFormulaire] = useState(VIDE);
   const [modaleOuverte, setModaleOuverte] = useState(false);
+  const [decalage, setDecalage] = useState(0);
+
+  // Cinquante lignes : de quoi retrouver une saisie récente sans
+  // charger une année d'historique pour y parvenir.
+  const LIMITE = 50;
   const [filtreSite, setFiltreSite] = useState('');
 
   const tirs = useQuery({
@@ -53,9 +58,9 @@ export default function EcranMinage() {
   });
 
   const prestations = useQuery({
-    queryKey: ['prestations-minage', filtreSite],
+    queryKey: ['prestations-minage', filtreSite, decalage],
     queryFn: async () => {
-      const query: Record<string, string | number> = { limite: 200 };
+      const query: Record<string, string | number> = { limite: LIMITE, decalage };
       if (filtreSite) query.site_id = Number(filtreSite);
       const { data, error } = await api.GET('/api/v1/minage/prestations', {
         params: { query: query as never },
@@ -78,6 +83,9 @@ export default function EcranMinage() {
     onSucces: () => {
       setFormulaire(VIDE);
       setModaleOuverte(false);
+      // La liste est classée du plus récent au plus ancien : une saisie
+      // faite depuis la page 3 n'apparaîtrait nulle part sans ce retour.
+      setDecalage(0);
     },
   });
 
@@ -103,7 +111,10 @@ export default function EcranMinage() {
       <Carte>
         <div className="filtres">
           <Champ libelle="Site">
-            <select value={filtreSite} onChange={(e) => setFiltreSite(e.target.value)}>
+            <select value={filtreSite} onChange={(e) => {
+                setFiltreSite(e.target.value);
+                setDecalage(0);
+              }}>
               <option value="">Tous les sites</option>
               {sites.data?.map((s) => (
                 <option key={s.id} value={s.id}>{s.code} — {s.libelle}</option>
@@ -167,6 +178,13 @@ export default function EcranMinage() {
             </table>
           </div>
         )}
+        <Pagination
+          total={prestations.data?.total ?? 0}
+          limite={LIMITE}
+          decalage={decalage}
+          nom="prestation"
+          onChanger={setDecalage}
+        />
       </Carte>
 
       <Modale

@@ -94,10 +94,10 @@ def test_le_rejet_est_journalise(client, entetes, rotation):
         headers=entetes("controleur"),
     ).json()
 
-    assert len(audit) == 1
-    assert audit[0]["champ"] == "statut"
-    assert audit[0]["nouvelle_valeur"] == "rejetee"
-    assert audit[0]["motif"] == "Doublon manifeste."
+    assert audit["total"] == 1
+    assert audit["elements"][0]["champ"] == "statut"
+    assert audit["elements"][0]["nouvelle_valeur"] == "rejetee"
+    assert audit["elements"][0]["motif"] == "Doublon manifeste."
 
 
 def test_une_correction_journalise_chaque_champ_modifie(client, entetes, rotation):
@@ -184,14 +184,14 @@ def test_la_file_de_validation_liste_ce_qui_reste_a_traiter(client, entetes, rot
 
     assert any(
         ligne["id"] == rotation and ligne["table_cible"] == "rotation_dumper"
-        for ligne in file_attente
+        for ligne in file_attente["elements"]
     )
 
     _statut(client, entetes, rotation, "controlee")
     _statut(client, entetes, rotation, "validee")
 
     apres = client.get("/api/v1/validation/file", headers=entetes("controleur")).json()
-    assert not any(ligne["id"] == rotation for ligne in apres)
+    assert not any(ligne["id"] == rotation for ligne in apres["elements"])
 
 
 def test_une_table_hors_workflow_est_refusee(client, entetes, rotation):
@@ -201,3 +201,79 @@ def test_une_table_hors_workflow_est_refusee(client, entetes, rotation):
         headers=entetes("controleur"),
     )
     assert reponse.status_code == 404
+
+
+def test_la_file_annonce_son_total_au_dela_du_plafond(client, entetes, parc):
+    """Le défaut que ce test protège : la file est ordonnée du plus ancien au
+    plus récent. Un plafond sans total escamotait donc les données du jour
+    derrière l'arriéré, et le contrôleur croyait sa file à jour parce que le
+    compteur affichait le nombre de lignes reçues, pas le nombre en attente."""
+    for rang in range(5):
+        reponse = client.post(
+            "/api/v1/marinage/rotations",
+            json={
+                "id": nouvel_id(),
+                "dumper_id": str(parc["engins"]["DU01"].id),
+                "site_id": parc["site_id"],
+                "horodatage": horodatage(rang + 1),
+                "quantite_estimee_t": 28.5,
+                "nature_quantite": "estimation",
+            },
+            headers=entetes("agent"),
+        )
+        assert reponse.status_code == 201, reponse.text
+
+    page = client.get(
+        "/api/v1/validation/file",
+        params={"limite": 2},
+        headers=entetes("controleur"),
+    ).json()
+
+    assert page["total"] == 5
+    assert len(page["elements"]) == 2
+    assert page["limite"] == 2 and page["decalage"] == 0
+
+    suite = client.get(
+        "/api/v1/validation/file",
+        params={"limite": 2, "decalage": 2},
+        headers=entetes("controleur"),
+    ).json()
+
+    assert suite["total"] == 5
+    # Les pages ne se recouvrent pas : sans quoi parcourir la file
+    # reviendrait à retraiter les mêmes lignes.
+    debut = {ligne["id"] for ligne in page["elements"]}
+    assert debut.isdisjoint({ligne["id"] for ligne in suite["elements"]})
+
+
+def test_le_journal_d_audit_annonce_son_total(client, entetes, parc):
+    """Le décalage existait déjà sur le journal, mais sans total : on pouvait
+    y avancer sans jamais savoir où il s'arrête.
+
+    Deux rejets, donc deux lignes : l'avancement nominal, lui, n'est pas
+    journalisé — seuls un rejet ou la reprise d'une donnée déjà validée le
+    sont."""
+    for rang in range(2):
+        identifiant = nouvel_id()
+        client.post(
+            "/api/v1/marinage/rotations",
+            json={
+                "id": identifiant,
+                "dumper_id": str(parc["engins"]["DU01"].id),
+                "site_id": parc["site_id"],
+                "horodatage": horodatage(rang + 1),
+                "quantite_estimee_t": 28.5,
+                "nature_quantite": "estimation",
+            },
+            headers=entetes("agent"),
+        )
+        _statut(client, entetes, identifiant, "rejetee", motif="Doublon manifeste.")
+
+    journal = client.get(
+        "/api/v1/validation/audit",
+        params={"table_cible": "rotation_dumper", "limite": 1},
+        headers=entetes("controleur"),
+    ).json()
+
+    assert journal["total"] == 2
+    assert len(journal["elements"]) == 1

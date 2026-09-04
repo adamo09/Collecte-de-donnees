@@ -1,5 +1,5 @@
 /**
- * Indicateurs — un seul écran pour deux lectures.
+ * Pilotage de la production — un seul écran pour deux lectures.
  *
  * L'exploitation y cherche ce qui s'est produit et ce qui l'a empêché ; le
  * contrôle de gestion y cherche ce sur quoi il peut appuyer un chiffre.
@@ -20,7 +20,7 @@ import { api, messageErreur } from '@/api/client';
 import { Carte, Champ, Chargement, Encart, Vide } from '@/composants/Communs';
 import { BarrePeseEstime, Courbe, Pareto, Tuile } from '@/composants/Graphiques';
 import { useSites } from '@/utils/requetes';
-import './Indicateurs.css';
+import './Production.css';
 
 const nombre = (valeur: number | null | undefined, decimales = 0) =>
   valeur === null || valeur === undefined
@@ -37,7 +37,7 @@ const ilYA = (jours: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-export default function EcranIndicateurs() {
+export default function EcranProduction() {
   const sites = useSites();
   const [site, setSite] = useState('');
   const [jours, setJours] = useState('30');
@@ -73,7 +73,7 @@ export default function EcranIndicateurs() {
     <>
       <header className="page__tete">
         <div>
-          <h1>Indicateurs</h1>
+          <h1>Production</h1>
           <p>
             Ce qui a été produit, ce qui l'a empêché, et la confiance qu'on peut
             accorder aux chiffres. Seules les données <strong>validées</strong> y

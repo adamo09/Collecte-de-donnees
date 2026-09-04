@@ -16,6 +16,7 @@ import {
   Bouton, Carte, Champ, Chargement, Encart, Manques, Pagination, manqueLongueur, StatutPastille, Vide, dateCourte,
 } from '@/composants/Communs';
 import { Modale } from '@/composants/Modale';
+import { useSession } from '@/contextes/Session';
 import { useEcriture } from '@/utils/mutations';
 import { useEngins, useSites } from '@/utils/requetes';
 import './Consultation.css';
@@ -164,6 +165,10 @@ const MODULES: Module[] = [
 type Enregistrement = Record<string, unknown>;
 
 export default function EcranConsultation() {
+  // La correction est réservée au superviseur côté serveur. Proposer le
+  // bouton à un agent de terrain lui apprendrait seulement que
+  // l'application refuse la moitié de ce qu'elle affiche.
+  const { peutValider } = useSession();
   const sites = useSites();
   const engins = useEngins();
 
@@ -260,9 +265,19 @@ export default function EcranConsultation() {
         <div>
           <h1>Consulter les données</h1>
           <p>
-            Retrouver un enregistrement précis et, si besoin, le corriger. Une
-            donnée validée qui est corrigée retourne au contrôle et doit être
-            revalidée avant de repartir vers le gestionnaire.
+            {peutValider ? (
+              <>
+                Retrouver un enregistrement précis et, si besoin, le corriger.
+                Une donnée validée qui est corrigée retourne au contrôle et
+                doit être revalidée avant de repartir vers le gestionnaire.
+              </>
+            ) : (
+              <>
+                Retrouver un enregistrement précis. La correction est réservée
+                au superviseur : signaler l'écart à son responsable de site
+                plutôt que de ressaisir la donnée sur le terminal.
+              </>
+            )}
           </p>
         </div>
       </header>
@@ -349,17 +364,19 @@ export default function EcranConsultation() {
                     ))}
                     <td><StatutPastille statut={String(ligne.statut)} /></td>
                     <td>
-                      <Bouton
-                        variante="secondaire"
-                        onClick={() => {
-                          setSelection(ligne);
-                          setChampCorrige('');
-                          setNouvelleValeur('');
-                          setMotif('');
-                        }}
-                      >
-                        Corriger
-                      </Bouton>
+                      {peutValider && (
+                        <Bouton
+                          variante="secondaire"
+                          onClick={() => {
+                            setSelection(ligne);
+                            setChampCorrige('');
+                            setNouvelleValeur('');
+                            setMotif('');
+                          }}
+                        >
+                          Corriger
+                        </Bouton>
+                      )}
                     </td>
                   </tr>
                 ))}
